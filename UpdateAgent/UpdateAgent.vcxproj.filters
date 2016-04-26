@@ -36,6 +36,24 @@
     <ClInclude Include="callback.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="NetConfig.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="VerConfig.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="refrence.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Log.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="AppModule.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="misc.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -45,6 +63,21 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="RunParamsFilter.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="NetConfig.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="VerConfig.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Log.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="AppModule.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="misc.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

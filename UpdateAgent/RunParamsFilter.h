@@ -1,11 +1,16 @@
 #pragma once
 
 #include "callback.h"
+#include <vector>
 class RunParamsFilter
 {
 public:
-	std::function<void(const std::string&, const std::string&)>	FilterFun;	//¹ıÂËÆ÷
-
+	typedef std::function<void(const CString&, const CString&)>	FilterFun;	//¹ıÂËÆ÷
+	typedef std::vector<FilterFun>	Filters;
 	RunParamsFilter();
-	~RunParamsFilter();
+	virtual ~RunParamsFilter();
+	void addFilter(const FilterFun& filter);
+	void runParser();
+private:
+	Filters	mFilters_;
 };
