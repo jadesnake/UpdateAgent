@@ -1,18 +1,18 @@
 #include "stdafx.h"
 #include <shellapi.h>
-#include "RunParamsFilter.h"
+#include "RunCmdFilter.h"
 
-RunParamsFilter::RunParamsFilter()
+RunCmdFilter::RunCmdFilter()
 {
 }
-RunParamsFilter::~RunParamsFilter()
+RunCmdFilter::~RunCmdFilter()
 {
 }
-void RunParamsFilter::addFilter(const FilterFun& filter) 
+void RunCmdFilter::addFilter(const FilterFun& filter)
 {
 	mFilters_.push_back(filter);
 }
-void RunParamsFilter::runParser()
+void RunCmdFilter::runParser()
 {
 	int nNumArgs = 0;
 	if (nullptr == ::GetCommandLine()) {

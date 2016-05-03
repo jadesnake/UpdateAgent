@@ -14,7 +14,8 @@ AppModule::~AppModule()
 }
 void AppModule::release()
 {
-	if (0 == (m_ref--)) {
+	m_ref--;
+	if (0 == m_ref.load()) {
 		delete gInstatnce_;
 		gInstatnce_ = nullptr;
 	}
@@ -27,16 +28,25 @@ AppModule*	AppModule::get()
 	m_ref++;
 	return gInstatnce_;
 }
-const VerConfig& AppModule::getVerConfigBySlef() {
-	return getVerConfig(0);
+const ExeModule& AppModule::getMySlefModule() {
+	return getModule(0);
 }
-const VerConfig& AppModule::getVerConfig(size_t nI) {
-	if (0 == mvercfgs_.size()) {
-		VerConfig val;
-		CString file = std::move(svy::GetAppPath());
+const ExeModule& AppModule::getModule(size_t nI) {
+	if (0 == mExes_.size()) {
+		ExeModule val;
+		CString file = svy::GetAppPath();
 		file += _T("config\\version.xml");
-		mbError_ = loadVerConfigByFile(file, val);
-		mvercfgs_.push_back(std::move(val));
+		mbError_ = loadVerConfigByFile(file, val.mVer_);
+		val.setPid( ::GetCurrentProcessId() );
+		mExes_.push_back(val);
 	}
-	return mvercfgs_.at(nI);
+	return mExes_.at(nI);
+}
+size_t AppModule::addModule(const ExeModule& exe) {
+	ExeModule val(exe);
+	mExes_.push_back(val);
+	return mExes_.size();
+}
+UINT  AppModule::getModuleCount() {
+	return mExes_.size();
 }

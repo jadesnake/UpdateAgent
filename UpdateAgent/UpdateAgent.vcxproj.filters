@@ -13,6 +13,9 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="CryptLib">
+      <UniqueIdentifier>{8b7a970d-3830-4488-ab47-496e3de4a8c4}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
@@ -28,9 +31,6 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="UpdateAgent.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="RunParamsFilter.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="callback.h">
@@ -54,15 +54,36 @@
     <ClInclude Include="misc.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="HttpClient.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="RunCmdFilter.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="ExeModule.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="CryptLib\LibMd5.h">
+      <Filter>CryptLib</Filter>
+    </ClInclude>
+    <ClInclude Include="UpdateSchedule.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="svyutil.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="CheckEntity.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="zip\ZipArchive.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="UpdateAgent.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="RunParamsFilter.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="NetConfig.cpp">
@@ -78,6 +99,30 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="misc.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="HttpClient.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="RunCmdFilter.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="ExeModule.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="CryptLib\LibMd5.cpp">
+      <Filter>CryptLib</Filter>
+    </ClCompile>
+    <ClCompile Include="UpdateSchedule.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="svyutil.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="CheckEntity.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="zip\ZipArchive.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

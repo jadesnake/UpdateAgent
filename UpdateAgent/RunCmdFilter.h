@@ -2,13 +2,13 @@
 
 #include "callback.h"
 #include <vector>
-class RunParamsFilter
+class RunCmdFilter
 {
 public:
 	typedef std::function<void(const CString&, const CString&)>	FilterFun;	//¹ýÂËÆ÷
 	typedef std::vector<FilterFun>	Filters;
-	RunParamsFilter();
-	virtual ~RunParamsFilter();
+	RunCmdFilter();
+	virtual ~RunCmdFilter();
 	void addFilter(const FilterFun& filter);
 	void runParser();
 private:

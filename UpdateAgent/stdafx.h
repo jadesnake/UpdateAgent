@@ -10,6 +10,7 @@
 #define WIN32_LEAN_AND_MEAN             //从 Windows 头中排除极少使用的资料
 // Windows 头文件: 
 #include <windows.h>
+#include <Psapi.h>
 #include <atlutil.h>
 // C 运行时头文件
 #include <stdio.h>
@@ -23,4 +24,5 @@
 #include "curl\curl.h"
 #include "lua\lua.h"
 #include "xml\tinyxml2.h"
+#include "callback.h"
 #include "Log.h"

@@ -4,7 +4,7 @@
 #include <memory>
 #include <utility>
 namespace svy {
-
+	typedef std::function<void(void)> StdClosure;
 	//用于表示callback应用生存周期
 	class Flag {
 
@@ -32,7 +32,7 @@ namespace svy {
 			if (!mFlag_.expired()) {
 				return mF_(std::forward<Args>(a)...);
 			}
-			return decltype(mF_(std::forward<Args>(a)...));
+			return decltype(mF_(std::forward<Args>(a)...))();
 		}
 		bool Expired() const {
 			return mFlag_.expired();
