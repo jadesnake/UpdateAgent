@@ -12,6 +12,8 @@
 #include <windows.h>
 #include <Psapi.h>
 #include <atlutil.h>
+#include <shellapi.h>
+#pragma comment(lib,"shell32.lib")
 // C 运行时头文件
 #include <stdio.h>
 #include <stdlib.h>

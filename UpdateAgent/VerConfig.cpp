@@ -26,7 +26,7 @@ bool loadVerConfigByFile(const CString& file, VerConfig &ret) {
 	if (nd1 && nd2 && nd3) {
 		ret.mVer_ = nd1->GetText();
 		ret.mProductCode_ = nd2->GetText();
-		ret.mEntryName_ = nd2->GetText();
+		ret.mEntryName_ = nd3->GetText();
 		return true;
 	}
 	return false;

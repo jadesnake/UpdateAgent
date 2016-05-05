@@ -1,8 +1,10 @@
 #pragma once
 
 #include "svyutil.h"
-#include "CheckEntity.h"
-class UpdateSchedule
+#include "List.h"
+
+class UpdateEntity;
+class UpdateSchedule :public svy::SupportWeakCall
 {
 public:
 	static UpdateSchedule* get();
@@ -12,8 +14,9 @@ public:
 protected:
 	virtual ~UpdateSchedule();
 	UpdateSchedule();
+	virtual void TimerProc(HANDLE h);
 private:
-	typedef	std::shared_ptr<CheckEntity> CheckEntityPtr;
-	std::vector<CheckEntityPtr>	mCheckEntities_;
+	typedef	svy::IListImpl<UpdateEntity> Entities;
+	Entities mCheckEntities_;
 	svy::Waitable mWaitable_;
 };

@@ -72,10 +72,16 @@
     <ClInclude Include="svyutil.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="CheckEntity.h">
+    <ClInclude Include="zip\ZipArchive.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="zip\ZipArchive.h">
+    <ClInclude Include="FilePath.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="List.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="UpdateEntity.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
@@ -119,10 +125,13 @@
     <ClCompile Include="svyutil.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="CheckEntity.cpp">
+    <ClCompile Include="zip\ZipArchive.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="zip\ZipArchive.cpp">
+    <ClCompile Include="FilePath.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="UpdateEntity.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

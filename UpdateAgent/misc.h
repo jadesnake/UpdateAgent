@@ -1,5 +1,6 @@
 #pragma once
 #include <vector>
+#include "filepath.h"
 namespace svy {
 	//用于格式化字符串
 	template <class A, class... Args>
@@ -28,12 +29,6 @@ namespace svy {
 	private:
 		int mCount_;	//由于单例的计数器在每次get后++，因此需要使用一个计算调用次数装置避免出现泄露
 	};
-	//获取exe运行目录
-	CString GetAppPath();
-	//从完整文件路径获取最后一级目录
-	CString FindFilePath(const CString& path);
-	//从路径内获取文件名不包括后缀
-	CString PathGetFileName(const CString& f);
 	//读取全部文件，将产生内存分配需外部手动回收
 	bool readFileAll(const CString& f, char **ret, DWORD &retSize);
 
@@ -42,7 +37,4 @@ namespace svy {
 	bool decodeHex(const char *inhex, DWORD hexlen, CStringA &to);
 	//求文件内容的md5值
 	CString fileContentHex(const CString& f);
-
-	//拼接url
-	CString catUrl(const CString& a,const CString& b);
 }

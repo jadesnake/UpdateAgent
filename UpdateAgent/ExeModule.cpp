@@ -19,9 +19,16 @@ ExeModule::ExeModule(const ExeModule& exe) {
 ExeModule::~ExeModule()
 {
 }
-CString ExeModule::getPathFile() {
+CString ExeModule::getPathFile() const {
 	return mExe_;
 }
+void ExeModule::setExePath(const CString& f) 
+{
+	if ( !::PathIsDirectory(f) && ::PathFileExists(f)) {
+		mExe_ = f;
+	}
+}
+
 void ExeModule::setPid(const CString& pid) {
 	mPid_ = pid;
 	setPid(_ttol(pid));
@@ -55,9 +62,9 @@ void ExeModule::setPrivateCA(const CString& f) {
 		LOG_FILE(svy::Log::L_ERROR, svy::strFormat(_T("ÃØÔ¿ %s Ëð»µ"), f));
 	}
 }
-CString ExeModule::getPublicCA() {
+CString ExeModule::getPublicCA() const {
 	return this->pubKey_;
 }
-CString ExeModule::getPrivateCA() {
+CString ExeModule::getPrivateCA() const {
 	return this->priKey_;
 }

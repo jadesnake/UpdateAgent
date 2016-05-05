@@ -170,10 +170,11 @@
   <ItemGroup>
     <ClInclude Include="AppModule.h" />
     <ClInclude Include="callback.h" />
-    <ClInclude Include="CheckEntity.h" />
     <ClInclude Include="CryptLib\LibMd5.h" />
     <ClInclude Include="ExeModule.h" />
+    <ClInclude Include="FilePath.h" />
     <ClInclude Include="HttpClient.h" />
+    <ClInclude Include="List.h" />
     <ClInclude Include="Log.h" />
     <ClInclude Include="misc.h" />
     <ClInclude Include="NetConfig.h" />
@@ -184,15 +185,16 @@
     <ClInclude Include="svyutil.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="UpdateAgent.h" />
+    <ClInclude Include="UpdateEntity.h" />
     <ClInclude Include="UpdateSchedule.h" />
     <ClInclude Include="VerConfig.h" />
     <ClInclude Include="zip\ZipArchive.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AppModule.cpp" />
-    <ClCompile Include="CheckEntity.cpp" />
     <ClCompile Include="CryptLib\LibMd5.cpp" />
     <ClCompile Include="ExeModule.cpp" />
+    <ClCompile Include="FilePath.cpp" />
     <ClCompile Include="HttpClient.cpp" />
     <ClCompile Include="Log.cpp" />
     <ClCompile Include="misc.cpp" />
@@ -206,6 +208,7 @@
     </ClCompile>
     <ClCompile Include="svyutil.cpp" />
     <ClCompile Include="UpdateAgent.cpp" />
+    <ClCompile Include="UpdateEntity.cpp" />
     <ClCompile Include="UpdateSchedule.cpp" />
     <ClCompile Include="VerConfig.cpp" />
     <ClCompile Include="zip\ZipArchive.cpp" />

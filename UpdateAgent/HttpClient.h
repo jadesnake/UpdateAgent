@@ -63,7 +63,7 @@ namespace svy
 
 		static void GlobalSetup();
 		static void GlobalClean();
-		static CURLcode PerformUrl(CURL* url);
+		static long PerformUrl(CURL* url);
 	protected:
 		typedef std::multimap<CAtlString,CAtlString>	mapStrings;
 		long		m_tmOut;

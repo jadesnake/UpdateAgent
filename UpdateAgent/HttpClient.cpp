@@ -90,10 +90,18 @@ namespace svy {
 	{
 		curl_global_cleanup();
 	}
-	CURLcode CHttpClient::PerformUrl(CURL* url)
+	long CHttpClient::PerformUrl(CURL* url)
 	{
 		CURLcode ret = curl_easy_perform(url);
-		return ret;
+		if (ret != CURLE_OK) {
+			return ret;
+		}
+		long retcode = 0;
+		ret = curl_easy_getinfo(url, CURLINFO_RESPONSE_CODE,&retcode);
+		if (ret != CURLE_OK) {
+			return ret;
+		}
+		return retcode;
 	}
 	CHttpClient::CHttpClient()
 		:m_url(NULL)
@@ -171,7 +179,7 @@ namespace svy {
 		else if (dwParamAttr == ParamFile)
 		{
 			curl_formadd(&m_postparam, &m_lastparam,
-				CURLFORM_COPYNAME, "filename",
+				CURLFORM_COPYNAME, szName.c_str(),
 				CURLFORM_FILE, szValue.c_str(),
 				CURLFORM_FILENAME, szName.c_str(),
 				CURLFORM_END);
@@ -200,7 +208,7 @@ namespace svy {
 			std::string name = (char*)CT2CA(szName, CP_UTF8);
 			file = (char*)CT2CA(szValue, CP_UTF8);
 			curl_formadd(&m_postparam, &m_lastparam,
-				CURLFORM_COPYNAME, "sendfile",
+				CURLFORM_COPYNAME, name.c_str(),
 				CURLFORM_FILE, file.c_str(),
 				CURLFORM_FILENAME, name.c_str(),
 				CURLFORM_END);

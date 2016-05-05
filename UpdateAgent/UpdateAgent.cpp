@@ -8,23 +8,58 @@
 #include "AppModule.h"
 #include "HttpClient.h"
 #include "UpdateSchedule.h"
-class HandleCmd
+#include "List.h"
+
+CString cmdSelfKey() {
+	CString chBuf;
+	chBuf.Format(_T("entryName:%s"), svy::GetAppName());
+	return chBuf;
+}
+
+//前置逻辑
+class PreLogic
 {
 public:
+	PreLogic() {
+		bRunUpdate = false;
+	}
+	void parseCommondLine() {
+		RunCmdFilter argsFilter;
+		argsFilter.addFilter(std::bind(&PreLogic::handler,this, std::placeholders::_1, std::placeholders::_2));
+		argsFilter.runParser();
+		//
+		svy::SinglePtr<AppModule> app;
+		UINT nMax = mExes_.size();
+		for (UINT nI = 0; nI < nMax; nI++) {
+			app->addModule(mExes_[nI]);
+		}
+	}
+	bool canRunUpdate() {
+		return bRunUpdate;
+	}
+protected:
 	void handler(const CString& a, const CString& b){
 		if (a == '|') {
-			//run parser
-			svy::SinglePtr<AppModule> app;
-
 			ExeModule exe;
 			exe.mVer_.mVer_ = margs_[_T("version")];
 			exe.mVer_.mProductCode_ = margs_[_T("productID")];
 			exe.mVer_.mEntryName_ = margs_[_T("entryName")];
-			exe.setPid(margs_[_T("pid")]);
+			if (0 == exe.mVer_.mEntryName_.CompareNoCase(svy::GetAppName())) {
+				AppModule::REG_INFO regInfo;
+				AppModule::ReadRegisteInfo(regInfo);
+				CString path = svy::catUrl(regInfo.path, svy::GetAppName());			
+				path += _T(".exe");
+				exe.setExePath(path);
+				bRunUpdate = true;
+			}
+			else {
+				//自己运行完后退出因此pid没用
+				exe.setPid(margs_[_T("pid")]);
+			}
 			exe.setPublicCA(margs_[_T("pubCA")]);
 			exe.setPrivateCA(margs_[_T("priCA")]);
-
-			app->addModule(exe);
+			//临时缓存
+			mExes_.push_back(exe);
 			margs_.clear();
 		}
 		else
@@ -32,33 +67,64 @@ public:
 	}
 private:
 	typedef std::map<CString, CString>	Args;
+	ExeModules mExes_;
 	Args	margs_;
+	bool	bRunUpdate;
 };
-void parseCommondLine() {
-	//运参数解析器
-	RunCmdFilter argsFilter;
-	HandleCmd	 cmdHandler;
-	argsFilter.addFilter(std::bind(&HandleCmd::handler, &cmdHandler, std::placeholders::_1, std::placeholders::_2));
-	argsFilter.runParser();
-}
-
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
                      _In_opt_ HINSTANCE hPrevInstance,
                      _In_ LPWSTR    lpCmdLine,
                      _In_ int       nCmdShow)
 {
-	svy::CHttpClient::GlobalSetup();
+#if !defined(_DEBUG)
+	if (lpCmdLine == NULL || lpCmdLine[0] == '\0') {
+		//没有任何参数无法运行
+		return	;
+	}
+#endif
 	LOG_FILE(svy::Log::L_INFO,svy::strFormat(_T("run cmd %s"),lpCmdLine));
     UNREFERENCED_PARAMETER(hPrevInstance);
     UNREFERENCED_PARAMETER(lpCmdLine);
-	//需要增加copy至appdata/remote目录运行命令行追加自己的版本信息
-	//....
-	//
 	//读取自己的配置信息
 	svy::SinglePtr<AppModule> app;
+	AppModule::REG_INFO regInfo;
+	PreLogic			prelogic;	
 	app->getMySlefModule();
-	//根据传入命令添加检测资源
-	parseCommondLine();
+	prelogic.parseCommondLine();
+	/*if ( !prelogic.canRunUpdate() ) {
+		//建立copy
+		CString dirAppD = svy::GetLocalAppDataPath();
+		CString dirSrc = svy::GetAppPath();
+		CString dirDst = svy::catUrl(dirAppD, svy::GetAppName());
+		if (!svy::CopyDir(dirSrc, dirDst)) {
+			return 0;
+		}
+		//
+		dirAppD = dirDst; //缓存运行目录
+		dirDst = svy::catUrl(dirDst, svy::GetAppName()) + _T(".exe");
+		CString strCmd;
+		CString strPrevCmds((LPCTSTR)CW2CT(lpCmdLine));
+		strPrevCmds.TrimRight();
+		if ('|' != strPrevCmds[strPrevCmds.GetLength() - 1]) {
+			strCmd.Format(_T("%s | version:%s %s |"), strPrevCmds,
+				app->getMySlefModule().mVer_.mVer_, cmdSelfKey() );
+		}
+		else {
+			strCmd.Format(_T("%s version:%s %s |"), strPrevCmds,
+				app->getMySlefModule().mVer_.mVer_, cmdSelfKey() );
+		}
+		regInfo.path = dirSrc;
+		regInfo.name = svy::GetAppName();
+		//将自己位置信息写入注册表
+		AppModule::SaveRegisteInfo(regInfo);		
+		::ShellExecute(NULL, _T("open"), dirDst,strCmd,dirAppD,0);
+		return 0;
+	}
+#if defined(_DEBUG)
+	MessageBoxW(NULL, lpCmdLine, L"wait for debug", 0);
+#endif*/
+	svy::CHttpClient::GlobalSetup();
+	//判断是否运行copy
 	//访问服务器检查更新
 	svy::SinglePtr<UpdateSchedule>	updateSchedule;
 
