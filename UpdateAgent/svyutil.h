@@ -3,12 +3,12 @@
 namespace svy {
 	class Waitable {
 	public:
-		typedef std::function<void(HANDLE)> EventProc;
+		typedef std::function<bool(HANDLE)> EventProc;
 		Waitable();
 		virtual ~Waitable();
 		HANDLE AddTimer(DWORD dwInterval, const EventProc& proc,BOOL bNoWait=FALSE);
 		bool AddHandler(HANDLE in, const EventProc& proc);
-		bool run(DWORD dwTm = INFINITE);
+		void run(DWORD dwTm = INFINITE);
 	protected:
 		int CopyHandle(HANDLE handles[MAXIMUM_WAIT_OBJECTS]);
 		int CopyProcs(EventProc procs[MAXIMUM_WAIT_OBJECTS]);

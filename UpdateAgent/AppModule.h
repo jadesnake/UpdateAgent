@@ -12,12 +12,13 @@ public:
 
 	static AppModule*	get();
 	static void release();
+	static lua_State*	getLua();
 
 	static bool SaveRegisteInfo(const REG_INFO& info);
 	static bool ReadRegisteInfo(REG_INFO& out);
 
 	const ExeModule& getMySlefModule();
-	const ExeModule& getModule(size_t nI);
+	const ExeModule& getTargetModule();
 	size_t addModule(const ExeModule& exe);
 	//获取可用module数量
 	UINT  getModuleCount();

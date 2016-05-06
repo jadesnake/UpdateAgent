@@ -44,7 +44,7 @@ namespace svy {
 		mEventProcs_.push_back(proc);
 		return  true;
 	}
-	bool Waitable::run(DWORD dwTm) {
+	void Waitable::run(DWORD dwTm) {
 		int nCount = 0;
 		HANDLE handles[MAXIMUM_WAIT_OBJECTS];
 		EventProc procs[MAXIMUM_WAIT_OBJECTS];
@@ -52,18 +52,19 @@ namespace svy {
 		CopyProcs(procs);
 		while (1) {
 			DWORD dwIndex = ::WaitForMultipleObjects(nCount, handles, FALSE, dwTm);
-			procs[dwIndex](handles[dwIndex]);
+			if (!procs[dwIndex](handles[dwIndex]))
+				break;
 		}
 	}
 	int Waitable::CopyHandle(HANDLE handles[MAXIMUM_WAIT_OBJECTS]) {
-		int ret = mHandlers_.size();
+		size_t ret = mHandlers_.size();
 		for (size_t nI = 0; nI < ret; nI++) {
 			handles[nI] = mHandlers_[nI];
 		}
 		return ret;
 	}
 	int Waitable::CopyProcs(EventProc procs[MAXIMUM_WAIT_OBJECTS]) {
-		int ret = mEventProcs_.size();
+		size_t ret = mEventProcs_.size();
 		for (size_t nI = 0; nI < ret; nI++) {
 			procs[nI] = mEventProcs_[nI];
 		}

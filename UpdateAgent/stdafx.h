@@ -24,7 +24,7 @@
 #include <crtdbg.h>
 // TODO:  在此处引用程序需要的其他头文件
 #include "curl\curl.h"
-#include "lua\lua.h"
+#include "lua\lua.hpp"
 #include "xml\tinyxml2.h"
 #include "callback.h"
 #include "Log.h"

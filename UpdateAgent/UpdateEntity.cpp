@@ -189,6 +189,12 @@ bool UpdateEntity::FetchUpdate(const std::string& val) {
 				info->url = info->url.Mid(0, dot);
 		}
 		info->ver = CA2CT(product->Attribute("END_VERSION"));
+		CString bNeedUp = CA2CT(product->Attribute("HAS_UPDATE"));
+		bNeedUp.Trim();
+		if (0 == bNeedUp.CompareNoCase(_T("0"))) {
+			LOG_FILE(svy::Log::L_INFO,(LPCTSTR)CA2CT(val.c_str()));
+			return true;
+		}
 		if ( !info->ver.IsEmpty() || !info->url.IsEmpty()) {
 			mUpData_.push_back(info);
 		}
@@ -313,23 +319,54 @@ bool UpdateEntity::CanUpdate() {
 HANDLE	UpdateEntity::GetProcess() {
 	return mExe_.mHandle_;
 }
-void UpdateEntity::Update() {
-	//
-
-	//
+bool UpdateEntity::Update() {	
+	bool bHasError = false;
+	std::vector<std::shared_ptr<UP_PACK>>	cmp;		//需要清除的队列
 	std::shared_ptr<UP_PACK> pack = mUpData_.getBegin();
+
+	svy::SinglePtr<AppModule> app;	//
+
 	while (pack = mUpData_.getNext()) {
-		if (pack->step == Step::CompleteAll) {
-				mCurVer_ = pack->ver;
+		CString dst = svy::FindFilePath(mExe_.getPathFile());
+		CString src = pack->path;
+		if (!svy::CopyDir(src, dst)) {
+			bHasError = true;
+			break;
 		}
+		pack->step = Step::CompleteAll;
+		cmp.push_back(pack);
+		lua_State *L = app->getLua();
+		CString luaMain = svy::catUrl(dst,_T("maintain\\maintain.lua"));
+		if (luaL_dofile(L, CT2CA(luaMain))) {
+			lua_getglobal(L, "UpdateComplete");
+			lua_pushstring(L, CT2CA(pack->ver));
+			lua_pushstring(L, CT2CA(dst));
+			lua_pcall(L, 2, 0, 0);
+		}
+		//移除升级文件
+		svy::DeleteDir(src);
 	}
-	//清除所有数据
-	mUpData_.clear();
+	//清除完成的包对于错误的下次继续执行
+	//可能由于程序关闭后没有完全释放导致覆盖失败
+	size_t nCount = cmp.size();
+	for (size_t nI = 0; nI < nCount;nI++) {
+		pack = cmp[nI];
+		mCurVer_ = pack->ver;
+		mUpData_.erase(pack);
+	}
+	if(!bHasError){
+		//清除所有数据
+		mUpData_.clear();
+	}
+	cmp.clear();
+	return (!bHasError);
 }
 void UpdateEntity::HandleUpdateAgent(const CString& dir) {
 	svy::SinglePtr<AppModule> app;
 	//检查目录下是否存在自己的升级包如果有则覆盖升级
 	CString root = svy::catUrl(dir,svy::GetAppName());
+	if (app->getMySlefModule().getPathFile().IsEmpty())
+		return;
 	if (::PathIsDirectory(root)) {
 		//移动文件夹
 		CString dst = svy::FindFilePath(app->getMySlefModule().getPathFile());

@@ -7,8 +7,6 @@
 std::atomic_int gRef = 0;
 static UpdateSchedule *volatile gInstatnce_ = nullptr;
 
-
-
 UpdateSchedule::UpdateSchedule()
 {
 }
@@ -29,42 +27,48 @@ void UpdateSchedule::release() {
 		gInstatnce_ = nullptr;
 	}
 }
-void UpdateSchedule::TimerProc(HANDLE h) {
-	HANDLE wait[MAXIMUM_WAIT_OBJECTS];
-	DWORD  nWaitCount = 0;
-	std::shared_ptr<UpdateEntity> entity = mCheckEntities_.getBegin();
-	while (entity=mCheckEntities_.getNext()) {
-		//启动更新
-		entity->Start(nullptr);
-		//检查是否需要升级
-		if (entity->CanUpdate()) {
-			wait[nWaitCount] = entity->GetProcess();
-			nWaitCount++;
-		}
+bool UpdateSchedule::CheckAlive(HANDLE h) {
+	//进程结束
+	if (!mCheckEntities_->CanUpdate()) {
+		return false;
 	}
-	if (nWaitCount == 0)
-		return;
-	long reWaitCount = 0;	//等待超时次数
+	mCheckEntities_->Update();	//升级
+	return false;
+}
+bool UpdateSchedule::TimerProc(HANDLE h) {
+	HANDLE wait=NULL;
+	mCheckEntities_->Start(nullptr);
+	//检查是否需要升级
+	if (mCheckEntities_->CanUpdate()) {
+		wait = mCheckEntities_->GetProcess();		
+	}
+	if (wait == NULL)
+		return true;		//不需要升级
+	long reTry = 0;			//重试次数
+	bool hasUpdateCmp= 0;	
+	//
 	do{
-		DWORD nIndex = ::WaitForMultipleObjects(nWaitCount,wait,FALSE,2000);
+		DWORD nIndex = ::WaitForSingleObject(wait,2000);
 		if (nIndex == WAIT_TIMEOUT) {
-			reWaitCount++;
+			reTry++;
 			continue;	//超时继续等待
 		}
-		entity = mCheckEntities_[nIndex];
-		entity->Update();
-
-		std::vector<HANDLE> wHs;	//缓存未完成的句柄
-		for (DWORD nP = 0; nP < nWaitCount;nP++) {
-			if (nIndex != nP)
-				wHs.push_back(wait[nP]);
+		if (nIndex == WAIT_FAILED) {
+			//程序可能已经退出随后自己也要退出
+			hasUpdateCmp = -1;
+			break;
 		}
-		memset(wait,0,sizeof(wait));
-		for (size_t nP = 0; nP < wHs.size();nP++) {
-			wait[nP] = wHs[nP];
+		if (!mCheckEntities_->Update())		{
+			reTry++;
+			hasUpdateCmp = -1;
+			continue;
 		}
-		nWaitCount = wHs.size();
-	} while (nWaitCount && reWaitCount<10 );
+		break;
+	} while (reTry<5 );
+	if (hasUpdateCmp) {
+		return false;
+	}
+	return true;
 }
 void UpdateSchedule::run() {
 	svy::SinglePtr<AppModule> app;
@@ -72,18 +76,13 @@ void UpdateSchedule::run() {
 #if defined(_DEBUG)
 	tm = 1000 * 60 * 60 * 10;		//debug版本1分钟检测一次
 #endif
-	UINT nMax = app->getModuleCount();
-	for (UINT nI = 0; nI < nMax; nI++) {
-		ExeModule exe = app->getModule(nI);
-		//由于升级程序没有产品编号因此跳过
-		CString s = svy::PathGetFileName(exe.getPathFile());
-		if (s.CompareNoCase(svy::GetAppName()) == 0) {
-			continue;
-		}
-		std::shared_ptr<UpdateEntity> ptr = std::make_shared<UpdateEntity>(app->getModule(nI));
-		mCheckEntities_.push_back(ptr);		
-	}
-	auto fun = svy::Bind(&UpdateSchedule::TimerProc, this, std::placeholders::_1);
+
+	ExeModule exe = app->getTargetModule();
+	CString s = svy::PathGetFileName(exe.getPathFile());
+	mCheckEntities_ = std::make_shared<UpdateEntity>(exe);
+	auto fun	= svy::Bind(&UpdateSchedule::TimerProc, this, std::placeholders::_1);
+	auto check  = svy::Bind(&UpdateSchedule::CheckAlive,this, std::placeholders::_1);
 	mWaitable_.AddTimer(tm, fun, TRUE);
+	mWaitable_.AddHandler(exe.mHandle_,check);
 	mWaitable_.run();
 }

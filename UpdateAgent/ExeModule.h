@@ -12,7 +12,6 @@ public:
 	void setPid(const CString& pid);
 	void setPid(DWORD pid);
 
-
 	void setPublicCA(const CString& f);
 	void setPrivateCA(const CString& f);
 	void setExePath(const CString& f);

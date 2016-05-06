@@ -256,4 +256,23 @@ namespace svy {
 		}
 		return ret;
 	}
+	/*---------------------------------------------------------------------------------------------*/
+	bool DeleteDir(const CString &dir)
+	{
+		SHFILEOPSTRUCT  shDelFile;
+		memset(&shDelFile, 0, sizeof(SHFILEOPSTRUCT));
+		shDelFile.fFlags |= FOF_SILENT;				//不显示进度
+		shDelFile.fFlags |= FOF_NOERRORUI;			//不报告错误信息
+		shDelFile.fFlags |= FOF_NOCONFIRMATION;		//直接删除，不进行确认
+													// 复制路径到一个以双NULL结束的string变量里
+		TCHAR buf[_MAX_PATH + 1];
+		_tcscpy_s(buf,_MAX_PATH,dir);				// 复制路径
+		buf[_tcslen(buf) + 1] = 0;		// 在末尾加两个NULL
+										// 设置SHFILEOPSTRUCT的参数为删除做准备
+		shDelFile.wFunc = FO_DELETE;	// 执行的操作
+		shDelFile.pFrom = buf;			// 操作的对象，也就是目录
+		shDelFile.pTo = NULL;			// 必须设置为NULL
+		shDelFile.fFlags &= ~FOF_ALLOWUNDO;		//直接删除，不进入回收站
+		return SHFileOperation(&shDelFile) == 0;
+	}
 }

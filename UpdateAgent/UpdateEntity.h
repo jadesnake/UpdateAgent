@@ -11,7 +11,7 @@ public:
 	//检查服务器版本
 	virtual void Start(void* h);
 	virtual bool CanUpdate();
-	virtual void Update();
+	virtual bool Update();
 	virtual HANDLE	GetProcess();
 protected:
 	enum XML_TYPE {

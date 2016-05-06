@@ -5,6 +5,7 @@ namespace svy {
 
 	bool	MoveDir(const CString& dir, const CString& dst);
 	bool	CopyDir(const CString& dir, const CString& dst);
+	bool	DeleteDir(const CString& dir);
 
 	CString catUrl(const CString& a, const CString& b);
 

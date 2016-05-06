@@ -3,6 +3,30 @@
 #include <atomic>
 std::atomic_long  m_ref = 0;
 static AppModule* volatile gInstatnce_ = nullptr;
+static lua_State* L = nullptr;
+
+static int OutputLuaDebugString(lua_State* L) {
+	int argNum = lua_gettop(L);
+	if (argNum == 0)
+		return -1;
+	int nType = lua_type(L, 1);
+	CString msg;
+	if (lua_isstring(L,1)) {
+		msg = CA2CT(lua_tostring(L, 1));
+	}
+	else if (lua_isnumber(L,1)) {
+		lua_Number var = lua_tonumber(L,1);
+		msg.Format(_T("%0.3f"),var);
+	}
+	else if (lua_isinteger(L, 1)) {
+		lua_Number var = lua_tonumber(L, 1);
+	}
+	else {
+		return -1;	//返回参数个数
+	}
+	OutputDebugString(msg);
+	return -1;		//返回参数个数
+}
 
 AppModule::AppModule()
 {
@@ -10,12 +34,15 @@ AppModule::AppModule()
 }
 AppModule::~AppModule()
 {
-
+	if (L) {
+		lua_close(L);
+		L = nullptr;
+	}
 }
 bool AppModule::SaveRegisteInfo(const AppModule::REG_INFO& info)
 {
 	HKEY hKey = NULL;
-	CString key = _T("SoftWare\\Servyou\\UPDATEAGENT"); 
+	CString key = _T("SoftWare\\Servyou\\UpdateAgentByjiayh"); 
 	DWORD  dwCode = ::RegOpenKeyEx(HKEY_CURRENT_USER, key, 0, KEY_ALL_ACCESS, &hKey);
 	if (dwCode) {
 		//需要创建
@@ -55,7 +82,7 @@ bool AppModule::ReadRegisteInfo(AppModule::REG_INFO& out)
 	PTCHAR chBuf  = (PTCHAR)malloc(dwLen);
 	DWORD  dwRead = dwLen;
 	memset(chBuf,0, dwLen);
-	dwCode = ::RegGetValue(hKey, _T("UPDATEAGENT"), _T("path"), RRF_RT_REG_SZ,NULL, chBuf,&dwRead);
+	dwCode = ::RegGetValue(hKey, _T("UpdateAgentByjiayh"), _T("path"), RRF_RT_REG_SZ,NULL, chBuf,&dwRead);
 	if (dwCode) {
 		LOG_FILE(svy::Log::L_ERROR, svy::strFormat(_T("RegGetValue %d"), dwCode));
 		::RegCloseKey(hKey);
@@ -63,7 +90,7 @@ bool AppModule::ReadRegisteInfo(AppModule::REG_INFO& out)
 		return false;
 	}
 	out.path = chBuf;
-	dwCode = ::RegGetValue(hKey, _T("UPDATEAGENT"), _T("name"), RRF_RT_REG_SZ, NULL, chBuf, &dwRead);
+	dwCode = ::RegGetValue(hKey, _T("UpdateAgentByjiayh"), _T("name"), RRF_RT_REG_SZ, NULL, chBuf, &dwRead);
 	if (dwCode) {
 		LOG_FILE(svy::Log::L_ERROR, svy::strFormat(_T("RegGetValue %d"), dwCode));
 		::RegCloseKey(hKey);
@@ -92,19 +119,34 @@ AppModule*	AppModule::get()
 	m_ref++;
 	return gInstatnce_;
 }
-const ExeModule& AppModule::getMySlefModule() {
-	return getModule(0);
+lua_State*	AppModule::getLua() {
+	if (L == nullptr) {
+		L = luaL_newstate();
+		luaopen_base(L);	//加载基本库
+		luaL_openlibs(L);	//加载扩展库
+		//绑定debug输出语句
+		lua_pushcfunction(L, OutputLuaDebugString);
+		lua_setglobal(L,"OutputString");
+	}
+	return L;
 }
-const ExeModule& AppModule::getModule(size_t nI) {
+const ExeModule& AppModule::getMySlefModule() {
+	ExeModule val;
 	if (0 == mExes_.size()) {
-		ExeModule val;
 		CString file = svy::GetAppPath();
 		file += _T("config\\version.xml");
 		mbError_ = loadVerConfigByFile(file, val.mVer_);
-		val.setPid( ::GetCurrentProcessId() );
+		val.setPid(::GetCurrentProcessId());
 		mExes_.push_back(val);
 	}
-	return mExes_.at(nI);
+	return mExes_[0];
+}
+const ExeModule& AppModule::getTargetModule() {
+	ExeModule val;
+	if ( 1 >= mExes_.size()) {
+		return val;
+	}
+	return mExes_.at(1);
 }
 size_t AppModule::addModule(const ExeModule& exe) {
 	ExeModule val(exe);

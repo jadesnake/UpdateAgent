@@ -2,7 +2,7 @@
 
 #include "svyutil.h"
 #include "List.h"
-
+#include <thread>
 class UpdateEntity;
 class UpdateSchedule :public svy::SupportWeakCall
 {
@@ -14,9 +14,9 @@ public:
 protected:
 	virtual ~UpdateSchedule();
 	UpdateSchedule();
-	virtual void TimerProc(HANDLE h);
+	virtual bool TimerProc(HANDLE h);
+	virtual bool CheckAlive(HANDLE h);
 private:
-	typedef	svy::IListImpl<UpdateEntity> Entities;
-	Entities mCheckEntities_;
+	std::shared_ptr<UpdateEntity> mCheckEntities_;
 	svy::Waitable mWaitable_;
 };

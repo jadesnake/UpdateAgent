@@ -31,7 +31,14 @@ public:
 		svy::SinglePtr<AppModule> app;
 		UINT nMax = mExes_.size();
 		for (UINT nI = 0; nI < nMax; nI++) {
-			app->addModule(mExes_[nI]);
+			ExeModule m = mExes_[nI];
+			if (m.mVer_.mEntryName_.CompareNoCase(svy::GetAppName())) {
+				if( !m.getPathFile().IsEmpty() && m.mHandle_ &&
+					!m.getPrivateCA().IsEmpty() && !m.getPublicCA().IsEmpty() )
+					app->addModule(m);
+			}
+			else
+				app->addModule(m);
 		}
 	}
 	bool canRunUpdate() {
@@ -76,10 +83,13 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
                      _In_ LPWSTR    lpCmdLine,
                      _In_ int       nCmdShow)
 {
+#if defined(_DEBUG)
+	MessageBoxW(NULL, lpCmdLine, L"wait for debug", 0);
+#endif
 #if !defined(_DEBUG)
 	if (lpCmdLine == NULL || lpCmdLine[0] == '\0') {
 		//没有任何参数无法运行
-		return	;
+		return	0;
 	}
 #endif
 	LOG_FILE(svy::Log::L_INFO,svy::strFormat(_T("run cmd %s"),lpCmdLine));
@@ -91,14 +101,15 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	PreLogic			prelogic;	
 	app->getMySlefModule();
 	prelogic.parseCommondLine();
-	/*if ( !prelogic.canRunUpdate() ) {
+	if (1 >= app->getModuleCount()) {
+		return 0;
+	}
+	if ( !prelogic.canRunUpdate() ) {
 		//建立copy
 		CString dirAppD = svy::GetLocalAppDataPath();
 		CString dirSrc = svy::GetAppPath();
 		CString dirDst = svy::catUrl(dirAppD, svy::GetAppName());
-		if (!svy::CopyDir(dirSrc, dirDst)) {
-			return 0;
-		}
+		svy::CopyDir(dirSrc, dirDst);
 		//
 		dirAppD = dirDst; //缓存运行目录
 		dirDst = svy::catUrl(dirDst, svy::GetAppName()) + _T(".exe");
@@ -120,9 +131,9 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		::ShellExecute(NULL, _T("open"), dirDst,strCmd,dirAppD,0);
 		return 0;
 	}
-#if defined(_DEBUG)
-	MessageBoxW(NULL, lpCmdLine, L"wait for debug", 0);
-#endif*/
+	//初始化lua模块
+	lua_State *L = app->getLua();
+	//初始化libcurl环境
 	svy::CHttpClient::GlobalSetup();
 	//判断是否运行copy
 	//访问服务器检查更新
