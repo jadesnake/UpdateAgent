@@ -1,32 +1,10 @@
 #include "stdafx.h"
 #include "AppModule.h"
 #include <atomic>
+#include "luaExterns.h"
 std::atomic_long  m_ref = 0;
 static AppModule* volatile gInstatnce_ = nullptr;
 static lua_State* L = nullptr;
-
-static int OutputLuaDebugString(lua_State* L) {
-	int argNum = lua_gettop(L);
-	if (argNum == 0)
-		return -1;
-	int nType = lua_type(L, 1);
-	CString msg;
-	if (lua_isstring(L,1)) {
-		msg = CA2CT(lua_tostring(L, 1));
-	}
-	else if (lua_isnumber(L,1)) {
-		lua_Number var = lua_tonumber(L,1);
-		msg.Format(_T("%0.3f"),var);
-	}
-	else if (lua_isinteger(L, 1)) {
-		lua_Number var = lua_tonumber(L, 1);
-	}
-	else {
-		return -1;	//返回参数个数
-	}
-	OutputDebugString(msg);
-	return -1;		//返回参数个数
-}
 
 AppModule::AppModule()
 {
@@ -124,9 +102,7 @@ lua_State*	AppModule::getLua() {
 		L = luaL_newstate();
 		luaopen_base(L);	//加载基本库
 		luaL_openlibs(L);	//加载扩展库
-		//绑定debug输出语句
-		lua_pushcfunction(L, OutputLuaDebugString);
-		lua_setglobal(L,"OutputString");
+		LuaExternsInstall(L);
 	}
 	return L;
 }

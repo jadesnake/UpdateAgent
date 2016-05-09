@@ -78,6 +78,19 @@ private:
 	Args	margs_;
 	bool	bRunUpdate;
 };
+
+void testLua() {
+	svy::SinglePtr<AppModule> app;
+	lua_State *L = app->getLua();
+	CString luaMain = _T("maintain.lua");
+	luaL_dofile(L, CT2CA(luaMain));
+	lua_getglobal(L, "BeginUpdate");
+	lua_pushstring(L, "12121212");
+	lua_pushstring(L, "test something1");
+	lua_pushstring(L, "test something2");
+	lua_pcall(L, 3, 0, 0);
+}
+
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
                      _In_opt_ HINSTANCE hPrevInstance,
                      _In_ LPWSTR    lpCmdLine,
@@ -86,6 +99,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 #if defined(_DEBUG)
 	MessageBoxW(NULL, lpCmdLine, L"wait for debug", 0);
 #endif
+	//testLua();
 #if !defined(_DEBUG)
 	if (lpCmdLine == NULL || lpCmdLine[0] == '\0') {
 		//没有任何参数无法运行

@@ -16,6 +16,9 @@
     <Filter Include="CryptLib">
       <UniqueIdentifier>{8b7a970d-3830-4488-ab47-496e3de4a8c4}</UniqueIdentifier>
     </Filter>
+    <Filter Include="LuaExterns">
+      <UniqueIdentifier>{16172cfc-0ac3-4129-b196-3d456bd30655}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
@@ -84,6 +87,9 @@
     <ClInclude Include="UpdateEntity.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="LuaExterns.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -132,6 +138,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="UpdateEntity.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="LuaExterns.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

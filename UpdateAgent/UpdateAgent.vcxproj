@@ -176,6 +176,7 @@
     <ClInclude Include="HttpClient.h" />
     <ClInclude Include="List.h" />
     <ClInclude Include="Log.h" />
+    <ClInclude Include="LuaExterns.h" />
     <ClInclude Include="misc.h" />
     <ClInclude Include="NetConfig.h" />
     <ClInclude Include="refrence.h" />
@@ -197,6 +198,7 @@
     <ClCompile Include="FilePath.cpp" />
     <ClCompile Include="HttpClient.cpp" />
     <ClCompile Include="Log.cpp" />
+    <ClCompile Include="LuaExterns.cpp" />
     <ClCompile Include="misc.cpp" />
     <ClCompile Include="NetConfig.cpp" />
     <ClCompile Include="RunCmdFilter.cpp" />

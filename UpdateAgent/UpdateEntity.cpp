@@ -329,20 +329,40 @@ bool UpdateEntity::Update() {
 	while (pack = mUpData_.getNext()) {
 		CString dst = svy::FindFilePath(mExe_.getPathFile());
 		CString src = pack->path;
+
+		lua_State *L = app->getLua();
+		CString luaMain = svy::catUrl(dst, _T("maintain\\maintain.lua"));
+		if (!luaL_dofile(L, CT2CA(luaMain))) {
+			luaMain.Empty();
+		}
+		if (!luaMain.IsEmpty()) {
+			lua_getglobal(L, "BeginUpdate");
+			lua_pushstring(L, CT2CA(pack->ver));
+			lua_pushstring(L, CT2CA(src));
+			lua_pushstring(L, CT2CA(dst));
+			lua_pcall(L, 3, 0, 0);
+		}
+
 		if (!svy::CopyDir(src, dst)) {
 			bHasError = true;
+			if (!luaMain.IsEmpty()) {
+				lua_getglobal(L, "UpdateError");
+				lua_pcall(L, 0, 0, 0);
+			}
 			break;
 		}
+
 		pack->step = Step::CompleteAll;
 		cmp.push_back(pack);
-		lua_State *L = app->getLua();
-		CString luaMain = svy::catUrl(dst,_T("maintain\\maintain.lua"));
-		if (luaL_dofile(L, CT2CA(luaMain))) {
-			lua_getglobal(L, "UpdateComplete");
+	
+		if (!luaMain.IsEmpty()) {
+			lua_getglobal(L, "EndUpdate");
 			lua_pushstring(L, CT2CA(pack->ver));
+			lua_pushstring(L, CT2CA(src));
 			lua_pushstring(L, CT2CA(dst));
-			lua_pcall(L, 2, 0, 0);
+			lua_pcall(L, 3, 0, 0);
 		}
+
 		//ÒÆ³ýÉý¼¶ÎÄ¼þ
 		svy::DeleteDir(src);
 	}
