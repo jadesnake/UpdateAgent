@@ -14,6 +14,8 @@
 #include <atlutil.h>
 #include <shellapi.h>
 #pragma comment(lib,"shell32.lib")
+#pragma comment(lib,"msimg32.lib")
+#pragma comment(lib,"Imm32.lib")
 // C 运行时头文件
 #include <stdio.h>
 #include <stdlib.h>
@@ -28,3 +30,21 @@
 #include "xml\tinyxml2.h"
 #include "callback.h"
 #include "Log.h"
+//soui
+/*
+#include "soui/include/souistd.h"
+#include "soui/include/core/SHostDialog.h"
+#include "soui/include/core/SHostWnd.h"
+#include "soui/include/control/SMessageBox.h"
+#include "soui/include/control/souictrls.h"
+#include "soui/components/com-cfg.h"
+#if defined(_DEBUG)
+#pragma comment(lib,"utilitiesd.lib")
+#pragma comment(lib,"souid.lib")
+#pragma comment(lib,"smileyd.lib")
+#else
+#pragma comment(lib,"utilities.lib")
+#pragma comment(lib,"soui.lib")
+#pragma comment(lib,"smiley.lib")
+#endif
+*/

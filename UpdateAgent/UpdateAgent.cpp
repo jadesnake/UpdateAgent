@@ -90,7 +90,7 @@ void testLua() {
 	lua_pushstring(L, "test something2");
 	lua_pcall(L, 3, 0, 0);
 }
-
+ 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
                      _In_opt_ HINSTANCE hPrevInstance,
                      _In_ LPWSTR    lpCmdLine,
@@ -113,7 +113,10 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	svy::SinglePtr<AppModule> app;
 	AppModule::REG_INFO regInfo;
 	PreLogic			prelogic;	
+
+	app->gInst_ = hInstance;
 	app->getMySlefModule();
+
 	prelogic.parseCommondLine();
 	if (1 >= app->getModuleCount()) {
 		return 0;
@@ -145,6 +148,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		::ShellExecute(NULL, _T("open"), dirDst,strCmd,dirAppD,0);
 		return 0;
 	}
+	OleInitialize(NULL);
 	//初始化lua模块
 	lua_State *L = app->getLua();
 	//初始化libcurl环境
@@ -156,5 +160,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	updateSchedule->run();
 
 	svy::CHttpClient::GlobalClean();
+
+	OleUninitialize();
 	return 0;
 }

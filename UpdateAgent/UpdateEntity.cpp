@@ -331,8 +331,9 @@ bool UpdateEntity::Update() {
 		CString src = pack->path;
 
 		lua_State *L = app->getLua();
-		CString luaMain = svy::catUrl(dst, _T("maintain\\maintain.lua"));
-		if (!luaL_dofile(L, CT2CA(luaMain))) {
+		CString luaMain = svy::catUrl(src, _T("maintain\\maintain.lua"));
+		int nLuaState = luaL_dofile(L, CT2CA(luaMain));
+		if (nLuaState) {
 			luaMain.Empty();
 		}
 		if (!luaMain.IsEmpty()) {
@@ -342,7 +343,6 @@ bool UpdateEntity::Update() {
 			lua_pushstring(L, CT2CA(dst));
 			lua_pcall(L, 3, 0, 0);
 		}
-
 		if (!svy::CopyDir(src, dst)) {
 			bHasError = true;
 			if (!luaMain.IsEmpty()) {
@@ -351,7 +351,6 @@ bool UpdateEntity::Update() {
 			}
 			break;
 		}
-
 		pack->step = Step::CompleteAll;
 		cmp.push_back(pack);
 	

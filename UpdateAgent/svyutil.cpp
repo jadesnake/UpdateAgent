@@ -40,8 +40,10 @@ namespace svy {
 	bool Waitable::AddHandler(HANDLE in, const Waitable::EventProc& proc) {
 		if (MAXIMUM_WAIT_OBJECTS < mHandlers_.size())
 			return false;
-		mHandlers_.push_back(in);
-		mEventProcs_.push_back(proc);
+		if (in) {
+			mHandlers_.push_back(in);
+			mEventProcs_.push_back(proc);
+		}
 		return  true;
 	}
 	void Waitable::run(DWORD dwTm) {
@@ -52,6 +54,12 @@ namespace svy {
 		CopyProcs(procs);
 		while (1) {
 			DWORD dwIndex = ::WaitForMultipleObjects(nCount, handles, FALSE, dwTm);
+			if (dwIndex == WAIT_TIMEOUT) {
+				continue;
+			}
+			if (dwIndex == WAIT_FAILED) {
+				break;	//ÓÐ´íÎóµÄhandle
+			}
 			if (!procs[dwIndex](handles[dwIndex]))
 				break;
 		}

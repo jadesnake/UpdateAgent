@@ -22,6 +22,7 @@ public:
 	size_t addModule(const ExeModule& exe);
 	//获取可用module数量
 	UINT  getModuleCount();
+	HINSTANCE gInst_;
 protected:
 	AppModule();
 	virtual ~AppModule();

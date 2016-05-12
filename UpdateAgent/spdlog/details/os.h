@@ -201,13 +201,8 @@ inline int utc_minutes_offset(const std::tm& tm = details::os::localtime())
 {
 
 #ifdef _WIN32
-#if _WIN32_WINNT < _WIN32_WINNT_WS08
-    TIME_ZONE_INFORMATION tzinfo;
-    auto rv = GetTimeZoneInformation(&tzinfo);
-#else
-    DYNAMIC_TIME_ZONE_INFORMATION tzinfo;
-    auto rv = GetDynamicTimeZoneInformation(&tzinfo);
-#endif
+	TIME_ZONE_INFORMATION tzinfo;
+	auto rv = GetTimeZoneInformation(&tzinfo);
     if (rv == TIME_ZONE_ID_INVALID)
         throw spdlog::spdlog_ex("Failed getting timezone info. Last error: " + GetLastError());
 

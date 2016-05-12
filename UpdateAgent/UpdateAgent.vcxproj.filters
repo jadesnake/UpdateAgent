@@ -72,9 +72,6 @@
     <ClInclude Include="UpdateSchedule.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="svyutil.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="zip\ZipArchive.h">
       <Filter>头文件</Filter>
     </ClInclude>
@@ -88,6 +85,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="LuaExterns.h">
+      <Filter>LuaExterns</Filter>
+    </ClInclude>
+    <ClInclude Include="svyutil.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
@@ -128,9 +128,6 @@
     <ClCompile Include="UpdateSchedule.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="svyutil.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="zip\ZipArchive.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -141,6 +138,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="LuaExterns.cpp">
+      <Filter>LuaExterns</Filter>
+    </ClCompile>
+    <ClCompile Include="svyutil.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

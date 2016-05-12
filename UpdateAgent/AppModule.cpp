@@ -5,10 +5,12 @@
 std::atomic_long  m_ref = 0;
 static AppModule* volatile gInstatnce_ = nullptr;
 static lua_State* L = nullptr;
+static ExeModule  emptyModule;
 
 AppModule::AppModule()
 {
 	mbError_ = false;
+	gInst_ = nullptr;
 }
 AppModule::~AppModule()
 {
@@ -60,6 +62,7 @@ bool AppModule::ReadRegisteInfo(AppModule::REG_INFO& out)
 	PTCHAR chBuf  = (PTCHAR)malloc(dwLen);
 	DWORD  dwRead = dwLen;
 	memset(chBuf,0, dwLen);
+	
 	dwCode = ::RegGetValue(hKey, _T("UpdateAgentByjiayh"), _T("path"), RRF_RT_REG_SZ,NULL, chBuf,&dwRead);
 	if (dwCode) {
 		LOG_FILE(svy::Log::L_ERROR, svy::strFormat(_T("RegGetValue %d"), dwCode));
@@ -118,9 +121,8 @@ const ExeModule& AppModule::getMySlefModule() {
 	return mExes_[0];
 }
 const ExeModule& AppModule::getTargetModule() {
-	ExeModule val;
 	if ( 1 >= mExes_.size()) {
-		return val;
+		return emptyModule;
 	}
 	return mExes_.at(1);
 }
