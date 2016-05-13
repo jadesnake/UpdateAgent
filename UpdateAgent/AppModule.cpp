@@ -52,7 +52,7 @@ bool AppModule::ReadRegisteInfo(AppModule::REG_INFO& out)
 {
 	AppModule::REG_INFO ret;
 	HKEY hKey = NULL;
-	CString key = _T("SoftWare\\Servyou\\");
+	CString key = _T("SoftWare\\Servyou\\UpdateAgentByjiayh");
 	DWORD  dwCode = ::RegOpenKeyEx(HKEY_CURRENT_USER, key, 0, KEY_ALL_ACCESS, &hKey);
 	if (dwCode) {
 		LOG_FILE(svy::Log::L_ERROR, svy::strFormat(_T("RegOpenKeyEx %d"), dwCode));
@@ -62,8 +62,7 @@ bool AppModule::ReadRegisteInfo(AppModule::REG_INFO& out)
 	PTCHAR chBuf  = (PTCHAR)malloc(dwLen);
 	DWORD  dwRead = dwLen;
 	memset(chBuf,0, dwLen);
-	
-	dwCode = ::RegGetValue(hKey, _T("UpdateAgentByjiayh"), _T("path"), RRF_RT_REG_SZ,NULL, chBuf,&dwRead);
+	dwCode = ::RegQueryValueEx(hKey, _T("path"),NULL,NULL,(LPBYTE)chBuf,&dwRead);
 	if (dwCode) {
 		LOG_FILE(svy::Log::L_ERROR, svy::strFormat(_T("RegGetValue %d"), dwCode));
 		::RegCloseKey(hKey);
@@ -71,7 +70,7 @@ bool AppModule::ReadRegisteInfo(AppModule::REG_INFO& out)
 		return false;
 	}
 	out.path = chBuf;
-	dwCode = ::RegGetValue(hKey, _T("UpdateAgentByjiayh"), _T("name"), RRF_RT_REG_SZ, NULL, chBuf, &dwRead);
+	dwCode = ::RegQueryValueEx(hKey, _T("name"), NULL,NULL, (LPBYTE)chBuf, &dwRead);
 	if (dwCode) {
 		LOG_FILE(svy::Log::L_ERROR, svy::strFormat(_T("RegGetValue %d"), dwCode));
 		::RegCloseKey(hKey);

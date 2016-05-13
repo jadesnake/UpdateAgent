@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "HttpClient.h"
+#include "log.h"
 namespace svy {
 	static int dbg_trace(CURL *handle, curl_infotype type,char *data, size_t size,void *userp)
 	{
@@ -169,23 +170,24 @@ namespace svy {
 	}
 	void	CHttpClient::AddParam(const std::string& szName, const std::string& szValue, ParamAttr dwParamAttr)
 	{
+		CURLFORMcode code = CURL_FORMADD_OK;
 		if (dwParamAttr == ParamNormal)
 		{
-			curl_formadd(&m_postparam, &m_lastparam,
+			code = curl_formadd(&m_postparam, &m_lastparam,
 				CURLFORM_COPYNAME, szName.c_str(),
 				CURLFORM_COPYCONTENTS, szValue.c_str(),
 				CURLFORM_END);
 		}
 		else if (dwParamAttr == ParamFile)
 		{
-			curl_formadd(&m_postparam, &m_lastparam,
+			code = curl_formadd(&m_postparam, &m_lastparam,
 				CURLFORM_COPYNAME, szName.c_str(),
 				CURLFORM_FILE, szValue.c_str(),
 				CURLFORM_FILENAME, szName.c_str(),
 				CURLFORM_END);
 		}
 		else if (dwParamAttr == ParamFileData) {
-			curl_formadd(&m_postparam, &m_lastparam,
+			code = curl_formadd(&m_postparam, &m_lastparam,
 				CURLFORM_COPYNAME, "file",
 				CURLFORM_FILENAME, szName.c_str(),
 				CURLFORM_COPYCONTENTS, szValue.c_str(),
@@ -294,7 +296,7 @@ namespace svy {
 		}
 		if( m_postparam )
 		{
-			curl_easy_setopt(m_url, CURLOPT_HTTPPOST,m_postparam);
+			curl_easy_setopt(m_url, CURLOPT_HTTPPOST, m_postparam);
 		}
 		if (m_bWriteHeader) {
 			curl_easy_setopt(m_url, CURLOPT_HEADERDATA, (void*)&m_headbuf);

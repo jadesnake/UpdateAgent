@@ -76,7 +76,7 @@ std::string UpdateEntity::BuildBody(XML_TYPE t) {
 		if (tinyxml2::XML_NO_ERROR == doc.SaveFile(CT2CA(path)))
 			ret = CT2CA(path);
 	}
-	else	{
+	else{
 		tinyxml2::XMLPrinter printer;
 		if( doc.Accept(&printer) )
 			ret = printer.CStr();
@@ -103,18 +103,24 @@ void UpdateEntity::Start(void* h) {
 	http.AddHeader(_T("RESERVE_HEAD"), _T("tdp"));
 	http.AddHeader(_T("CREATE_DATE"), CTime::GetCurrentTime().Format(_T("%Y/%m/%d")));
 	http.SetAgent(_T("Mozilla/3.0 (compatible; Indy Library)"));
-
+	
 	std::string f = BuildBody(BUILD_XML_FILE);
+	if (f.empty()) {
+		CString msg = svy::strFormat(_T("%s 建立失败"), CA2CT(f.c_str()));
+		LOG_FILE(svy::Log::L_ERROR, msg);
+		return ;
+	}	
 
 	http.AddParam("file0", f, svy::CHttpClient::ParamFile);
+	
 	http.EnableWriteHeader(true);
 	http.PerformParam(a);
+
 	long hCode = svy::CHttpClient::PerformUrl(http.GetCURL());
 	//上传结束后删除文件
 	::DeleteFileA(f.c_str());
-
 	if (hCode != 200) {
-		CString msg = svy::strFormat(_T("%s failed %d"),a, hCode);
+		CString msg = svy::strFormat(_T("%s failed %d"),a,hCode);
 		LOG_FILE(svy::Log::L_ERROR,msg);
 		return;
 	} 
