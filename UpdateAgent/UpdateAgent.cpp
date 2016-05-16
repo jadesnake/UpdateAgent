@@ -9,6 +9,7 @@
 #include "HttpClient.h"
 #include "UpdateSchedule.h"
 #include "List.h"
+#include "ui.h"
 
 CString cmdSelfKey() {
 	CString chBuf;
@@ -51,6 +52,12 @@ protected:
 			exe.mVer_.mVer_ = margs_[_T("version")];
 			exe.mVer_.mProductCode_ = margs_[_T("productID")];
 			exe.mVer_.mEntryName_ = margs_[_T("entryName")];
+	
+			Args::iterator it = margs_.find(_T("nickName"));
+			if (it != margs_.end()) {
+				exe.mVer_.mNickName_ = it->second;
+			}
+
 			if (0 == exe.mVer_.mEntryName_.CompareNoCase(svy::GetAppName())) {
 				AppModule::REG_INFO regInfo;
 				AppModule::ReadRegisteInfo(regInfo);
@@ -78,7 +85,7 @@ private:
 	Args	margs_;
 	bool	bRunUpdate;
 };
-
+//测试代码
 void testLua() {
 	svy::SinglePtr<AppModule> app;
 	lua_State *L = app->getLua();
@@ -90,12 +97,18 @@ void testLua() {
 	lua_pushstring(L, "test something2");
 	lua_pcall(L, 3, 0, 0);
 }
- 
+#include "ui.h"
+//
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
                      _In_opt_ HINSTANCE hPrevInstance,
                      _In_ LPWSTR    lpCmdLine,
                      _In_ int       nCmdShow)
 {
+	InstallSoui();
+	ShowTipWindow(_T("123123123sdfasdfasdfasddfffsafsdfsfsf12312312312312313123131312313131312312312321313213123123123123123213123213131312313131231232123"));
+	UninstallSoui();
+	return 0;
+
 #if defined(_DEBUG)
 	MessageBoxW(NULL, lpCmdLine, L"wait for debug", 0);
 #endif
@@ -116,7 +129,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 	app->gInst_ = hInstance;
 	app->getMySlefModule();
-
 	prelogic.parseCommondLine();
 	if (1 >= app->getModuleCount()) {
 		return 0;
@@ -149,6 +161,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		return 0;
 	}
 	OleInitialize(NULL);
+	InstallSoui();
 	//初始化lua模块
 	lua_State *L = app->getLua();
 	//初始化libcurl环境
@@ -161,6 +174,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 	svy::CHttpClient::GlobalClean();
 
+	UninstallSoui();
 	OleUninitialize();
 	return 0;
 }

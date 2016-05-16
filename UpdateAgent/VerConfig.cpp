@@ -8,6 +8,7 @@ VerConfig::VerConfig(const VerConfig& val){
 	mVer_ = val.mVer_;
 	mProductCode_ = val.mProductCode_;
 	mEntryName_	  = val.mEntryName_;
+	mNickName_ = val.mNickName_;
 }
 VerConfig::~VerConfig() {
 

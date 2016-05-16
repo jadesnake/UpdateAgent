@@ -3,6 +3,7 @@
 #include <atomic>
 #include "AppModule.h"
 #include "UpdateEntity.h"
+#include "ui.h"
 
 std::atomic_int gRef = 0;
 static UpdateSchedule *volatile gInstatnce_ = nullptr;
@@ -43,7 +44,8 @@ bool UpdateSchedule::TimerProc(HANDLE h) {
 		wait = mCheckEntities_->GetProcess();		
 	}
 	if (wait == NULL)
-		return true;		//不需要升级
+		return true;		//不需要升级	
+	ShowTipWindow(mCheckEntities_->GetDescription());
 	long reTry = 0;			//重试次数
 	bool hasUpdateCmp= 0;	
 	//
@@ -60,8 +62,10 @@ bool UpdateSchedule::TimerProc(HANDLE h) {
 		}
 		if (!mCheckEntities_->Update())		{
 			reTry++;
-			hasUpdateCmp = -1;
 			continue;
+		}
+		else {
+			hasUpdateCmp = -1;
 		}
 		break;
 	} while (reTry<5 );

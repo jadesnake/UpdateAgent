@@ -13,6 +13,7 @@ public:
 	virtual bool CanUpdate();
 	virtual bool Update();
 	virtual HANDLE	GetProcess();
+	CString GetDescription();
 protected:
 	enum XML_TYPE {
 		BUILD_XML_FILE,

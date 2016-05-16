@@ -31,7 +31,7 @@
 #include "callback.h"
 #include "Log.h"
 //soui
-/*
+
 #include "soui/include/souistd.h"
 #include "soui/include/core/SHostDialog.h"
 #include "soui/include/core/SHostWnd.h"
@@ -47,4 +47,3 @@
 #pragma comment(lib,"soui.lib")
 #pragma comment(lib,"smiley.lib")
 #endif
-*/

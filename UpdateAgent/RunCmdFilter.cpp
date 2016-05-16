@@ -27,8 +27,10 @@ void RunCmdFilter::runParser()
 	{
 		LPWSTR nxtArg   = szArglist[n];
 		size_t szArgLen = wcslen(nxtArg);
-		LPWSTR flag = wcschr(nxtArg,':');
-		if (flag != nullptr) {
+		LPWSTR flag1 = wcschr(nxtArg,':');
+		LPWSTR flag2 = wcschr(nxtArg,'=');
+		LPWSTR flag = (flag1 ? flag1 : flag2) ;
+		if (flag) {
 			strCmd = CString(nxtArg, flag- nxtArg);
 			strVal = CString(flag+1);
 		}

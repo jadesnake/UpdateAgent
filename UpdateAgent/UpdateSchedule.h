@@ -9,7 +9,6 @@ class UpdateSchedule :public svy::SupportWeakCall
 public:
 	static UpdateSchedule* get();
 	static void release();
-
 	virtual void run();
 protected:
 	virtual ~UpdateSchedule();

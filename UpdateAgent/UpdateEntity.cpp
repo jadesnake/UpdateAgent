@@ -325,6 +325,31 @@ bool UpdateEntity::CanUpdate() {
 HANDLE	UpdateEntity::GetProcess() {
 	return mExe_.mHandle_;
 }
+CString UpdateEntity::GetDescription() {
+	CString ret;
+	CString one;
+
+	if (1 == mUpData_.count()) {
+		std::shared_ptr<UP_PACK> pack = mUpData_.getBegin();
+		one.Format(_T("%s %s 已就绪\r\n"), mExe_.mVer_.mNickName_, pack->ver);
+	}
+	else if (mUpData_.count() > 1) {
+		std::shared_ptr<UP_PACK> bgn = mUpData_.getBegin();
+		std::shared_ptr<UP_PACK> last = mUpData_.getLast();
+		one.Format(_T("%s %s ～ %s 已就绪\r\n"), mExe_.mVer_.mNickName_, bgn->ver,last->ver);
+	}
+	else {
+		ret = _T("没有升级文件");
+		return ret;
+	}
+	ret += one;
+	if(!mExe_.mVer_.mNickName_.IsEmpty())
+		one.Format(_T("%s 关闭后升级"), mExe_.mVer_.mNickName_);
+	else
+		one.Format(_T("%s 关闭后升级"), mExe_.mVer_.mEntryName_);
+	ret += one;
+	return ret;
+}
 bool UpdateEntity::Update() {	
 	bool bHasError = false;
 	std::vector<std::shared_ptr<UP_PACK>>	cmp;		//需要清除的队列
