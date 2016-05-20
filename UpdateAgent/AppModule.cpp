@@ -19,6 +19,100 @@ AppModule::~AppModule()
 		L = nullptr;
 	}
 }
+bool AppModule::SavePid(DWORD pid) {
+	HKEY hKey = NULL;
+	CString key = _T("SoftWare\\Servyou\\UpdateAgentByjiayh");
+	DWORD  dwCode = ::RegOpenKeyEx(HKEY_CURRENT_USER, key, 0, KEY_ALL_ACCESS, &hKey);
+	if (dwCode) {
+		//需要创建
+		dwCode = ::RegCreateKeyEx(HKEY_CURRENT_USER, key, 0, REG_NONE,
+			REG_OPTION_NON_VOLATILE, KEY_WRITE | KEY_READ, NULL, &hKey, NULL);
+		if (dwCode) {
+			LOG_FILE(svy::Log::L_ERROR, svy::strFormat(_T("RegCreateKeyEx %d"), dwCode));
+			return false;
+		}
+	}
+	dwCode = ::RegSetValueEx(hKey, _T("PID"), 0, REG_DWORD, (BYTE *)&pid, sizeof(DWORD));
+	if (dwCode) {
+		LOG_FILE(svy::Log::L_ERROR, svy::strFormat(_T("RegSetValueEx %d"), dwCode));
+		::RegCloseKey(hKey);
+		return false;
+	}
+	::RegCloseKey(hKey);
+	return true;
+}
+bool AppModule::ReadPid(DWORD &pid) {
+	AppModule::REG_INFO ret;
+	HKEY hKey = NULL;
+	CString key = _T("SoftWare\\Servyou\\UpdateAgentByjiayh");
+	DWORD  dwCode = ::RegOpenKeyEx(HKEY_CURRENT_USER, key, 0, KEY_ALL_ACCESS, &hKey);
+	if (dwCode) {
+		LOG_FILE(svy::Log::L_ERROR, svy::strFormat(_T("RegOpenKeyEx %d"), dwCode));
+		return false;
+	}
+	DWORD  dwLen = MAX_PATH ;	
+	PTCHAR chBuf = (PTCHAR)malloc(dwLen);
+	DWORD  dwRead = dwLen;
+	memset(chBuf, 0, dwLen);
+	dwCode = ::RegQueryValueEx(hKey, _T("PID"), NULL, NULL, (LPBYTE)chBuf, &dwRead);
+	if (dwCode) {
+		LOG_FILE(svy::Log::L_ERROR, svy::strFormat(_T("RegGetValue %d"), dwCode));
+		::RegCloseKey(hKey);
+		free(chBuf);
+		return false;
+	}
+	pid = *chBuf;
+	::RegCloseKey(hKey);
+	free(chBuf);
+	return true;
+}
+bool AppModule::SaveRunStatus(const CString& state){
+	HKEY hKey = NULL;
+	CString key = _T("SoftWare\\Servyou\\UpdateAgentByjiayh");
+	DWORD  dwCode = ::RegOpenKeyEx(HKEY_CURRENT_USER, key, 0, KEY_ALL_ACCESS, &hKey);
+	if (dwCode) {
+		//需要创建
+		dwCode = ::RegCreateKeyEx(HKEY_CURRENT_USER, key, 0, REG_NONE,
+			REG_OPTION_NON_VOLATILE, KEY_WRITE | KEY_READ, NULL, &hKey, NULL);
+		if (dwCode) {
+			LOG_FILE(svy::Log::L_ERROR, svy::strFormat(_T("RegCreateKeyEx %d"), dwCode));
+			return false;
+		}
+	}
+	dwCode = ::RegSetValueEx(hKey, _T("status"), 0, REG_SZ, (BYTE *)state.GetString(), sizeof(TCHAR)*state.GetLength());
+	if (dwCode) {
+		LOG_FILE(svy::Log::L_ERROR, svy::strFormat(_T("RegSetValueEx %d"), dwCode));
+		::RegCloseKey(hKey);
+		return false;
+	}
+	::RegCloseKey(hKey);
+	return true;
+}
+bool AppModule::ReadRunStatus(CString& state) {
+	AppModule::REG_INFO ret;
+	HKEY hKey = NULL;
+	CString key = _T("SoftWare\\Servyou\\UpdateAgentByjiayh");
+	DWORD  dwCode = ::RegOpenKeyEx(HKEY_CURRENT_USER, key, 0, KEY_ALL_ACCESS, &hKey);
+	if (dwCode) {
+		LOG_FILE(svy::Log::L_ERROR, svy::strFormat(_T("RegOpenKeyEx %d"), dwCode));
+		return false;
+	}
+	DWORD  dwLen = MAX_PATH * 2 * sizeof(TCHAR);	//为了能容纳下路径等信息
+	PTCHAR chBuf = (PTCHAR)malloc(dwLen);
+	DWORD  dwRead = dwLen;
+	memset(chBuf, 0, dwLen);
+	dwCode = ::RegQueryValueEx(hKey, _T("status"), NULL, NULL, (LPBYTE)chBuf, &dwRead);
+	if (dwCode) {
+		LOG_FILE(svy::Log::L_ERROR, svy::strFormat(_T("RegGetValue %d"), dwCode));
+		::RegCloseKey(hKey);
+		free(chBuf);
+		return false;
+	}
+	state = chBuf;
+	::RegCloseKey(hKey);
+	free(chBuf);
+	return true;
+}
 bool AppModule::SaveRegisteInfo(const AppModule::REG_INFO& info)
 {
 	HKEY hKey = NULL;

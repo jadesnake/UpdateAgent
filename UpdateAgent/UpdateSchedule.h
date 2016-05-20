@@ -4,7 +4,8 @@
 #include "List.h"
 #include <thread>
 class UpdateEntity;
-class UpdateSchedule :public svy::SupportWeakCall
+class Upgrade;
+class UpdateSchedule : public svy::SupportWeakCall
 {
 public:
 	static UpdateSchedule* get();
@@ -15,7 +16,10 @@ protected:
 	UpdateSchedule();
 	virtual bool TimerProc(HANDLE h);
 	virtual bool CheckAlive(HANDLE h);
+	virtual void AsyncUpdate();
+	virtual void AsyncUpdatePos(const CString& f, long pos);
 private:
 	std::shared_ptr<UpdateEntity> mCheckEntities_;
 	svy::Waitable mWaitable_;
+	Upgrade *mUI_;
 };

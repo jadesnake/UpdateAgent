@@ -43,6 +43,40 @@ namespace svy {
 		}
 		return dwRet;
 	}
+	DWORD	CountDirFiles(const CString& dir) {
+		DWORD dwRet = 0;
+		WIN32_FIND_DATA	pData = { 0 };
+		HANDLE hFind = INVALID_HANDLE_VALUE;
+		CString a;
+		//文件移动使用move
+		if (dir.IsEmpty())
+			return dwRet;
+		a = catUrl(dir, _T("*.*"));
+		hFind = ::FindFirstFile(a, &pData);
+		if (hFind == INVALID_HANDLE_VALUE)
+			return dwRet;
+		do
+		{
+			CString name = pData.cFileName;
+			CString srcF;
+			if (name == '.' || name == _T("..")) {
+				//跳过系统默认目录
+				continue;
+			}
+			bool subRet = false;
+			if ((pData.dwFileAttributes&FILE_ATTRIBUTE_DIRECTORY) == FILE_ATTRIBUTE_DIRECTORY)
+			{
+				srcF  = catUrl(dir, name);
+				dwRet += CountDirFiles(srcF);
+			}
+			else {
+				dwRet++;
+			}
+		} while (FindNextFile(hFind, &pData));
+		::FindClose(hFind);
+		//清空移动过的目录
+		return dwRet;
+	}
 	bool MoveFileInernal(const CString& a, const CString& b) {
 		::SetFileAttributes(a, FILE_ATTRIBUTE_NORMAL);
 		if (::MoveFileEx(a, b, MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH))	{
@@ -110,7 +144,7 @@ namespace svy {
 		::RemoveDirectory(dir);
 		return bRet;
 	}
-	bool	CopyDir(const CString& dir, const CString& dst) 
+	bool	CopyDir(const CString& dir, const CString& dst,TransFileFun fun)
 	{
 		bool bRet = true;
 		WIN32_FIND_DATA	pData = { 0 };
@@ -141,12 +175,14 @@ namespace svy {
 			{
 				srcF = catUrl(dir, name);
 				tarF = catUrl(dst, name);
-				subRet = CopyDir(srcF, tarF);
+				subRet = CopyDir(srcF, tarF, fun);
 			}
 			else {
 				srcF = catUrl(dir, name);
 				tarF = catUrl(dst, name);
 				subRet = CopyFileInernal(srcF, tarF);
+				if (subRet&&fun)
+					fun(tarF);
 			}
 			if (bRet)
 				bRet = subRet;

@@ -10,6 +10,7 @@
 #include "UpdateSchedule.h"
 #include "List.h"
 #include "ui.h"
+#include "UpdateEntity.h"
 
 CString cmdSelfKey() {
 	CString chBuf;
@@ -41,6 +42,37 @@ public:
 			else
 				app->addModule(m);
 		}
+	}
+	//处理前一个升级程序运行态
+	bool HandlePreUpdate() {
+		svy::SinglePtr<AppModule> app;
+		CString state;
+		DWORD	prePid = 0;
+		AppModule::ReadPid(prePid);
+		if (prePid == 0) {
+			return true;
+		}
+		DWORD nRights = PROCESS_QUERY_INFORMATION | PROCESS_DUP_HANDLE | SYNCHRONIZE | PROCESS_TERMINATE;
+		HANDLE h = ::OpenProcess(nRights, FALSE, prePid);
+		if (h == NULL)
+			return true;
+		app->ReadRunStatus(state);
+		if (0 == state.Compare(UPDATE_COMPLETE)) {
+			return true;
+		}
+		if (0==state.Compare(CHECK_UPDATE)|| 0==state.Compare(GET_UPDATE) )		{
+			//正在获取升级文件，强制杀死上一个进程
+			::TerminateProcess(h, 0xdead);
+			AppModule::SavePid(0);
+			::CloseHandle(h);
+			return true;
+		}
+		//请等待升级完成，给出等待ui
+		ExeModule exe = app->getTargetModule();
+		::TerminateProcess(exe.mHandle_->get(),0);
+		ShowMsgBox(_T("正在升级请稍候再试..."));
+		::CloseHandle(h);
+		return false;
 	}
 	bool canRunUpdate() {
 		return bRunUpdate;
@@ -98,17 +130,59 @@ void testLua() {
 	lua_pcall(L, 3, 0, 0);
 }
 #include "ui.h"
+
+
+
+class TestAsync : public svy::Async 
+{
+public:
+	TestAsync(Upgrade *ui) {
+		mui_ = ui;
+	}
+	void WinCall(const CString& p1, long p2) {
+		OutputDebugString(p1);
+		OutputDebugString(_T("\r\n"));
+		mui_->Update(p2);
+		if (p2 == -1)
+			mui_->Close();
+	}
+	virtual void RunAsThread() override {
+		__super::RunAsThread();
+		for (long n = 0; n < 100;n++) {
+			CString p1;
+			p1.Format(_T("%d"),n);
+			auto f = std::bind(&TestAsync::WinCall, this, std::placeholders::_1, std::placeholders::_2);
+			svy::ProgressTask task( f,p1,n);
+			PushTask(task);
+			::Sleep(100);
+		}
+		auto f1 = std::bind(&TestAsync::WinCall, this, std::placeholders::_1, std::placeholders::_2);
+		svy::ProgressTask task(f1,_T("complete"), -1);
+		PushTask(task);
+	}
+	Upgrade *mui_;
+};
+
 //
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
                      _In_opt_ HINSTANCE hPrevInstance,
                      _In_ LPWSTR    lpCmdLine,
                      _In_ int       nCmdShow)
 {
+	/*
+	TestAsync *testAsync=__nullptr;
 	InstallSoui();
-	ShowTipWindow(_T("123123123sdfasdfasdfasddfffsafsdfsfsf12312312312312313123131312313131312312312321313213123123123123123213123213131312313131231232123"));
-	UninstallSoui();
-	return 0;
+	Upgrade *ui = ShowUpgrade(100);
+	HWND hWin = ui->GetRaw();
 
+	testAsync = new TestAsync(ui);
+	testAsync->Start(hWin);
+
+	ui->Show();
+	UninstallSoui();
+	delete testAsync;
+	return 0;*/
+	//
 #if defined(_DEBUG)
 	MessageBoxW(NULL, lpCmdLine, L"wait for debug", 0);
 #endif
@@ -126,13 +200,22 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	svy::SinglePtr<AppModule> app;
 	AppModule::REG_INFO regInfo;
 	PreLogic			prelogic;	
-
 	app->gInst_ = hInstance;
 	app->getMySlefModule();
 	prelogic.parseCommondLine();
 	if (1 >= app->getModuleCount()) {
 		return 0;
 	}
+
+	//初始化soui
+	OleInitialize(NULL);
+	InstallSoui();
+	if (!prelogic.HandlePreUpdate()) {
+		UninstallSoui();
+		OleUninitialize();
+		return 0;
+	}
+
 	if ( !prelogic.canRunUpdate() ) {
 		//建立copy
 		CString dirAppD = svy::GetLocalAppDataPath();
@@ -158,10 +241,11 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		//将自己位置信息写入注册表
 		AppModule::SaveRegisteInfo(regInfo);		
 		::ShellExecute(NULL, _T("open"), dirDst,strCmd,dirAppD,0);
+		UninstallSoui();
+		OleUninitialize();
 		return 0;
 	}
-	OleInitialize(NULL);
-	InstallSoui();
+	AppModule::SavePid(::GetCurrentProcessId());
 	//初始化lua模块
 	lua_State *L = app->getLua();
 	//初始化libcurl环境
@@ -176,5 +260,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 	UninstallSoui();
 	OleUninitialize();
+	AppModule::SavePid(0);
 	return 0;
 }

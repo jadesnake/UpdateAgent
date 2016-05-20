@@ -57,6 +57,9 @@ ZipExtract::ZipExtract() {
 ZipExtract::~ZipExtract() {
 	Close();
 }
+DWORD	ZipExtract::GetTotal() {
+	return this->m_total;
+}
 ZRESULT ZipExtract::Open(const CString& file) {
 	if (this->strPass.IsEmpty())
 		m_pZipF = unzOpen64(CT2CA(file));

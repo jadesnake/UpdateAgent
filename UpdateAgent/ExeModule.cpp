@@ -9,11 +9,10 @@
 #endif
 
 ExeModule::ExeModule(){
-	mHandle_ = nullptr;
+	
 }
 ExeModule::ExeModule(const VerConfig& ver) 
 	:mVer_(ver){
-	mHandle_ = nullptr;
 }
 ExeModule::ExeModule(const ExeModule& exe) {
 	mVer_ = exe.mVer_;
@@ -23,8 +22,8 @@ ExeModule::ExeModule(const ExeModule& exe) {
 	priKey_ = exe.priKey_;
 	mHandle_ = exe.mHandle_;
 }
-ExeModule::~ExeModule()
-{
+ExeModule::~ExeModule(){
+
 }
 CString ExeModule::getPathFile() const {
 	return mExe_;
@@ -42,21 +41,24 @@ void ExeModule::setPid(const CString& pid) {
 void ExeModule::setPid(DWORD pid) {
 	if (mPid_.IsEmpty())
 		mPid_.Format(_T("%ld"),pid);
-	mHandle_ = ::OpenProcess(PROCESS_QUERY_INFORMATION|PROCESS_DUP_HANDLE|SYNCHRONIZE|PROCESS_VM_READ,FALSE,pid);
-	if (!mHandle_) {
-		LOG_FILE(svy::Log::L_ERROR,svy::strFormat(_T("OpenProcess %d"),::GetLastError()));
+	HANDLE hTmp_ = ::OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_DUP_HANDLE | SYNCHRONIZE | PROCESS_TERMINATE | PROCESS_VM_READ, FALSE, pid);
+	if (!hTmp_) {
+		LOG_FILE(svy::Log::L_ERROR, svy::strFormat(_T("OpenProcess %d"), ::GetLastError()));
 		return;
 	}
 	HMODULE hPSapi = ::LoadLibrary(_T("Psapi.DLL"));
 	if (hPSapi == NULL)
 		return;
+	if (!mHandle_) {
+		mHandle_ = std::make_shared<svy::HandlePtr>(hTmp_);
+	}
 #if defined(_UNICODE)
 	GetProcessFileNameW procfilename = (GetProcessFileNameW)::GetProcAddress(hPSapi, "GetModuleFileNameExW");
 	if (procfilename == NULL)
 		return;
 	WCHAR path[MAX_PATH + 1] = { 0 };
 	memset(path, 0, sizeof(path));
-	procfilename(mHandle_, NULL, path, MAX_PATH);
+	procfilename(mHandle_->get(), NULL, path, MAX_PATH);
 	mExe_ = CW2CT(path);
 #else
 	GetProcessFileNameA procfilename = (GetProcessFileNameW)::GetProcAddress(hPSapi, "GetModuleFileNameExA");

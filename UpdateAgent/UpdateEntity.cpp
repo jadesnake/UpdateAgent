@@ -4,19 +4,12 @@
 #include "xml/tinyxml2.h"
 #include "zip/ZipArchive.h"
 #include "AppModule.h"
-bool isHttpReponseOK(const std::string& v) {
-	size_t end = v.find("\r\n");
-	if ( std::string::npos== end )
-		return false;
-	std::string p = v.substr(0, end);
-	if (std::string::npos == p.find("200")) {
-		return false;
-	}
-	return true;
-}
+#include "luaExterns.h"
 
 UpdateEntity::UpdateEntity(const ExeModule& exe)
-	:mExe_(exe) {
+	:mExe_(exe)
+	,mTotalFiles_(0)
+{
 	CString xml = svy::GetAppPath() + _T("config\\net.xml");
 	loadNetConfigByFile(xml,mNetCfg_);
 	mCurVer_ = mExe_.mVer_.mVer_;
@@ -86,6 +79,9 @@ std::string UpdateEntity::BuildBody(XML_TYPE t) {
 
 void UpdateEntity::Start(void* h) {
 	svy::CHttpClient	http;
+	//	
+	AppModule::SaveRunStatus(CHECK_UPDATE);
+
 	//使用第一个参数连接服务器
 	NetConfig::SERVICE netcfg = mNetCfg_.mSvrs[0];
 	CString a(netcfg.ip);
@@ -108,6 +104,7 @@ void UpdateEntity::Start(void* h) {
 	if (f.empty()) {
 		CString msg = svy::strFormat(_T("%s 建立失败"), CA2CT(f.c_str()));
 		LOG_FILE(svy::Log::L_ERROR, msg);
+		AppModule::SaveRunStatus(UPDATE_COMPLETE);
 		return ;
 	}	
 
@@ -118,10 +115,11 @@ void UpdateEntity::Start(void* h) {
 
 	long hCode = svy::CHttpClient::PerformUrl(http.GetCURL());
 	//上传结束后删除文件
-	::DeleteFileA(f.c_str());
+	::DeleteFileA(f.c_str());	
 	if (hCode != 200) {
 		CString msg = svy::strFormat(_T("%s failed %d"),a,hCode);
 		LOG_FILE(svy::Log::L_ERROR,msg);
+		AppModule::SaveRunStatus(UPDATE_COMPLETE);
 		return;
 	} 
 	std::string result = http.GetHeader();
@@ -131,9 +129,12 @@ void UpdateEntity::Start(void* h) {
 	result = http.GetStream();
 	if (!result.size()) {
 		LOG_FILE(svy::Log::L_INFO,_T("缺少body数据"));
+		AppModule::SaveRunStatus(UPDATE_COMPLETE);
 		return;
 	}
+	AppModule::SaveRunStatus(GET_UPDATE);		//获取数据
 	FetchUpdate(result);
+	AppModule::SaveRunStatus(UPDATE_COMPLETE);
 }
 bool UpdateEntity::FetchUpdate(const std::string& val) {
 	{
@@ -323,7 +324,19 @@ bool UpdateEntity::CanUpdate() {
 	return (nReady && nReady == mUpData_.count());
 }
 HANDLE	UpdateEntity::GetProcess() {
-	return mExe_.mHandle_;
+	if (mExe_.mHandle_) {
+		return mExe_.mHandle_->get();
+	}
+	return NULL;
+}
+DWORD	UpdateEntity::GetTotalFiles() {
+	DWORD dwRet = 0;
+	std::shared_ptr<UpdateEntity::UP_PACK> pack = mUpData_.getBegin();
+	while (pack = mUpData_.getNext()) {
+		CString src = pack->path;
+		dwRet += svy::CountDirFiles(src);
+	}
+	return dwRet;
 }
 CString UpdateEntity::GetDescription() {
 	CString ret;
@@ -350,12 +363,135 @@ CString UpdateEntity::GetDescription() {
 	ret += one;
 	return ret;
 }
-bool UpdateEntity::Update() {	
+/*-------------------------------------------------------------------------------------------------*/
+class UpdateAsync : public svy::Async
+{
+public:
+	typedef std::function<void(void)> CmpFun;
+	UpdateAsync( UpdateEntity::UPDATA& up ) {
+		mUpData_.swap(up);
+		mPos_ = 0;
+	}
+	virtual ~UpdateAsync() {
+		mPos_ = 0;
+		mUpData_.clear();
+	}
+	void CopyCmp(const CString& f) {
+		mPos_++;
+		svy::ProgressTask task(mTask_,f, mPos_);
+		svy::Async::PushTask(task);
+		::Sleep(100);		//为了让进度条不至于一闪而过
+	}
+	void RunAsThread() override {
+		bool bHasError = false;
+		std::vector<std::shared_ptr<UpdateEntity::UP_PACK>>	cmp;			//需要清除的队列
+		std::shared_ptr<UpdateEntity::UP_PACK> pack = mUpData_.getBegin();
+		AppModule::SaveRunStatus(EXCUTE_MAINTAIN);
+		lua_State *L = luaL_newstate();
+		luaopen_base(L);				//加载基本库
+		luaL_openlibs(L);				//加载扩展库
+		LuaExternsInstall(L);
+
+		while (pack = mUpData_.getNext()) {
+			CString dst = mRoot_;
+			CString src = pack->path;
+
+			CString luaMain = svy::catUrl(src, _T("maintain\\maintain.lua"));
+			int nLuaState = luaL_dofile(L, CT2CA(luaMain));
+			if (nLuaState) {
+				luaMain.Empty();
+			}
+			if (!luaMain.IsEmpty()) {
+				lua_getglobal(L, "BeginUpdate");
+				lua_pushstring(L, CT2CA(pack->ver));
+				lua_pushstring(L, CT2CA(src));
+				lua_pushstring(L, CT2CA(dst));
+				lua_pcall(L, 3, 0, 0);
+			}
+			if ( !svy::CopyDir(src, dst,std::bind(&UpdateAsync::CopyCmp,this,std::placeholders::_1)) ) {
+				bHasError = true;
+				if (!luaMain.IsEmpty()) {
+					lua_getglobal(L, "UpdateError");
+					lua_pcall(L, 0, 0, 0);
+				}
+				svy::ProgressTask task(mTask_,_T("has error"), -1);
+				svy::Async::PushTask(task);
+				break;
+			}
+			pack->step = UpdateEntity::Step::CompleteAll;
+			cmp.push_back(pack);
+
+			if (!luaMain.IsEmpty()) {
+				lua_getglobal(L, "EndUpdate");
+				lua_pushstring(L, CT2CA(pack->ver));
+				lua_pushstring(L, CT2CA(src));
+				lua_pushstring(L, CT2CA(dst));
+				lua_pcall(L, 3, 0, 0);
+			}
+			//移除升级文件
+			svy::DeleteDir(src);
+		}
+		//清除完成的包对于错误的下次继续执行
+		//可能由于程序关闭后没有完全释放导致覆盖失败
+		size_t nCount = cmp.size();
+		for (size_t nI = 0; nI < nCount; nI++) {
+			pack = cmp[nI];
+			mCurVer_ = pack->ver;
+			mUpData_.erase(pack);
+		}
+		if (!bHasError) {
+			//清除所有数据
+			mUpData_.clear();
+		}
+		cmp.clear();
+
+		lua_close(L);
+		AppModule::SaveRunStatus(UPDATE_COMPLETE);
+
+		svy::ProgressTask task(mTask_, _T("complete"), -1);
+		svy::Async::PushTask(task);
+	}
+public:
+	UpdateEntity::UPDATA	mUpData_;
+	CString					mCurVer_;		//当前起始版本
+	CString					mRoot_;			//根目录
+	long					mPos_;
+	svy::ProgressTask::Runnable	 mTask_;
+};
+void UpdateEntity::UpdateAync(HWND hWin, svy::ProgressTask::Runnable task) {
+	auto f = svy::Bind(&UpdateEntity::AsyncUpdateCall, this, std::placeholders::_1, std::placeholders::_2);	
+	UpdateAsync *Async=nullptr;
+	if (!mAsync_)
+		mAsync_ = std::make_shared<UpdateAsync>(mUpData_);
+	mAyncCall_ = task;
+	Async = static_cast<UpdateAsync*>(mAsync_.get());
+	Async->mTask_ = f;
+	Async->mRoot_ = svy::FindFilePath(mExe_.getPathFile());
+	Async->Start(hWin);
+	//清空
+	mUpData_.clear();
+}
+void UpdateEntity::AsyncUpdateCall(const CString& a, long b) {
+	UpdateAsync *Async = nullptr;
+	Async = static_cast<UpdateAsync*>(mAsync_.get());
+	if (b == -1){
+		//完成
+		mCurVer_ = Async->mCurVer_;
+		mUpData_.swap(Async->mUpData_);
+		mAsync_.reset();		
+	}
+	if (mAyncCall_)
+		mAyncCall_(a,b);
+}
+
+bool UpdateEntity::UpdateSync() {	
 	bool bHasError = false;
+	svy::SinglePtr<AppModule> app;	//
+
 	std::vector<std::shared_ptr<UP_PACK>>	cmp;		//需要清除的队列
 	std::shared_ptr<UP_PACK> pack = mUpData_.getBegin();
 
-	svy::SinglePtr<AppModule> app;	//
+	AppModule::SaveRunStatus(EXCUTE_MAINTAIN);
 
 	while (pack = mUpData_.getNext()) {
 		CString dst = svy::FindFilePath(mExe_.getPathFile());
@@ -409,6 +545,8 @@ bool UpdateEntity::Update() {
 		mUpData_.clear();
 	}
 	cmp.clear();
+		
+	AppModule::SaveRunStatus(UPDATE_COMPLETE);
 	return (!bHasError);
 }
 void UpdateEntity::HandleUpdateAgent(const CString& dir) {

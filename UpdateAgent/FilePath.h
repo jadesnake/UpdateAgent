@@ -1,10 +1,15 @@
 #pragma once
 namespace svy {
+	typedef std::function<void(const CString&)>	 TransFileFun;
 
 	DWORD	CheckDir(LPCTSTR pDir, bool bCreate);
 
+	DWORD	CountDirFiles(const CString& dir);
+
 	bool	MoveDir(const CString& dir, const CString& dst);
-	bool	CopyDir(const CString& dir, const CString& dst);
+
+	bool	CopyDir(const CString& dir, const CString& dst,TransFileFun fun=nullptr);
+
 	bool	DeleteDir(const CString& dir);
 
 	CString catUrl(const CString& a, const CString& b);

@@ -28,12 +28,26 @@ void UpdateSchedule::release() {
 		gInstatnce_ = nullptr;
 	}
 }
+void UpdateSchedule::AsyncUpdate() {
+	DWORD nF = mCheckEntities_->GetTotalFiles();
+	mUI_ = ShowUpgrade(nF);
+	mCheckEntities_->UpdateAync(mUI_->GetRaw(),
+		svy::Bind(&UpdateSchedule::AsyncUpdatePos,this,std::placeholders::_1, std::placeholders::_2)	);
+	mUI_->Show();
+}
+void UpdateSchedule::AsyncUpdatePos(const CString& f, long pos) {
+	if (pos == -1) {
+		mUI_->Close();
+	}
+	else if (mUI_)
+		mUI_->Update(pos);
+}
 bool UpdateSchedule::CheckAlive(HANDLE h) {
 	//进程结束
 	if (!mCheckEntities_->CanUpdate()) {
 		return false;
 	}
-	mCheckEntities_->Update();	//升级
+	AsyncUpdate();
 	return false;
 }
 bool UpdateSchedule::TimerProc(HANDLE h) {
@@ -46,30 +60,11 @@ bool UpdateSchedule::TimerProc(HANDLE h) {
 	if (wait == NULL)
 		return true;		//不需要升级	
 	ShowTipWindow(mCheckEntities_->GetDescription());
-	long reTry = 0;			//重试次数
-	bool hasUpdateCmp= 0;	
-	//
-	do{
-		DWORD nIndex = ::WaitForSingleObject(wait,2000);
-		if (nIndex == WAIT_TIMEOUT) {
-			reTry++;
-			continue;	//超时继续等待
-		}
-		if (nIndex == WAIT_FAILED) {
-			//程序可能已经退出随后自己也要退出
-			hasUpdateCmp = -1;
-			break;
-		}
-		if (!mCheckEntities_->Update())		{
-			reTry++;
-			continue;
-		}
-		else {
-			hasUpdateCmp = -1;
-		}
-		break;
-	} while (reTry<5 );
-	if (hasUpdateCmp) {
+	DWORD dwWait = ::WaitForSingleObject(wait, 2000);
+	if (dwWait == WAIT_TIMEOUT)
+		return true;
+	if (dwWait == WAIT_FAILED || dwWait == 0) {
+		AsyncUpdate();	
 		return false;
 	}
 	return true;
@@ -87,6 +82,6 @@ void UpdateSchedule::run() {
 	auto fun	= svy::Bind(&UpdateSchedule::TimerProc, this, std::placeholders::_1);
 	auto check  = svy::Bind(&UpdateSchedule::CheckAlive,this, std::placeholders::_1);
 	mWaitable_.AddTimer(tm, fun, TRUE);
-	mWaitable_.AddHandler(exe.mHandle_,check);
+	mWaitable_.AddHandler(exe.mHandle_->get(),check);
 	mWaitable_.run();
 }

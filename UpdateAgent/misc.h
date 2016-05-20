@@ -9,6 +9,28 @@ namespace svy {
 		ret.Format(a, args...);
 		return ret;
 	}
+
+	class HandlePtr {
+	public:
+		HandlePtr(HANDLE h) : mHandle_(h){ }
+		~HandlePtr(){
+			DWORD dwFlags = 0;
+			if (mHandle_) {
+				if( ::GetHandleInformation(mHandle_,&dwFlags) )
+					::CloseHandle(mHandle_);
+				mHandle_ = NULL;
+			}
+		}
+		void   clear() {
+			mHandle_ = NULL;	//释放资源
+		}
+		HANDLE get() {
+			return mHandle_;
+		}
+	private:
+		HANDLE	mHandle_;
+	};
+	typedef std::shared_ptr<HandlePtr>	WinHandlePtr;
 	//对单例调用包装避免出现内存泄露
 	//单例增加引用计数因为C++单例也是通过内存分配得到的实例而在退出时候如果不调用release那么会产生泄露
 	//而提前调用release又会出现访问违规，例如：a(){ s = get();s->release(); } b(){ s = get();s->relase() }

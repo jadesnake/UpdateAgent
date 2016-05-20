@@ -20,8 +20,8 @@ public:
 	CString getPrivateCA() const;
 	CString getPathFile() const;
 public:
-	VerConfig mVer_;
-	HANDLE	  mHandle_;	//exe 实例的句柄 
+	VerConfig			mVer_;
+	svy::WinHandlePtr	mHandle_;	//exe 实例的句柄 
 private:
 	CString	  mPid_;
 	CString	  mExe_;	//exe 运行路径

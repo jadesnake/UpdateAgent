@@ -45,6 +45,7 @@ public:
 	ZRESULT Open(const CString& file);
 	ZRESULT Extract(const CString& root);
 	ZRESULT Close();
+	DWORD	GetTotal();	//获取文件个数
 public:
 	CString strPass;
 protected:

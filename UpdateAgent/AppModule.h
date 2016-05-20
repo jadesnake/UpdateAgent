@@ -17,6 +17,12 @@ public:
 	static bool SaveRegisteInfo(const REG_INFO& info);
 	static bool ReadRegisteInfo(REG_INFO& out);
 
+	static bool SaveRunStatus(const CString& state);
+	static bool ReadRunStatus(CString& state);
+
+	static bool SavePid(DWORD pid);
+	static bool ReadPid(DWORD &pid);
+
 	const ExeModule& getMySlefModule();
 	const ExeModule& getTargetModule();
 	size_t addModule(const ExeModule& exe);

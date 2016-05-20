@@ -22,7 +22,7 @@ namespace svy
 		std::shared_ptr<theItem> push_back()
 		{
 			std::shared_ptr<theItem> ret;
-			ret = std::make_shared<theItem>()
+			ret = std::make_shared<theItem>();
 			m_lock.Lock();
 			m_lstC.push_back(ret);
 			m_lock.UnLock();
@@ -137,6 +137,15 @@ namespace svy
 			m_lock.Lock();
 			m_lstC.clear();				
 			m_nSz = 0;
+			m_lock.UnLock();
+		}
+		void swap( IListImpl<theItem, theLock> &v ) {		
+			m_lock.Lock();
+				v.m_lock.Lock();
+					m_lstC.swap(v.m_lstC);
+					m_nSz = 0;
+					v.m_nSz = 0;
+				v.m_lock.UnLock();
 			m_lock.UnLock();
 		}
 		void  release()
