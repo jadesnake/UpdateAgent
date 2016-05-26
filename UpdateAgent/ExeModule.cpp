@@ -2,12 +2,6 @@
 #include "ExeModule.h"
 #include <memory>
 
-#if defined(_UNICODE)
-	typedef DWORD(WINAPI* GetProcessFileNameW)(HANDLE, HMODULE, LPWSTR, DWORD);
-#else
-	typedef DWORD(WINAPI* GetProcessFileNameA)(HANDLE, HMODULE, LPASTR, DWORD);
-#endif
-
 ExeModule::ExeModule(){
 	
 }
@@ -46,29 +40,13 @@ void ExeModule::setPid(DWORD pid) {
 		LOG_FILE(svy::Log::L_ERROR, svy::strFormat(_T("OpenProcess %d"), ::GetLastError()));
 		return;
 	}
-	HMODULE hPSapi = ::LoadLibrary(_T("Psapi.DLL"));
-	if (hPSapi == NULL)
-		return;
+	CString path = svy::GetProcessFullName(hTmp_);
+	if (path.IsEmpty())
+		return ;
 	if (!mHandle_) {
 		mHandle_ = std::make_shared<svy::HandlePtr>(hTmp_);
 	}
-#if defined(_UNICODE)
-	GetProcessFileNameW procfilename = (GetProcessFileNameW)::GetProcAddress(hPSapi, "GetModuleFileNameExW");
-	if (procfilename == NULL)
-		return;
-	WCHAR path[MAX_PATH + 1] = { 0 };
-	memset(path, 0, sizeof(path));
-	procfilename(mHandle_->get(), NULL, path, MAX_PATH);
-	mExe_ = CW2CT(path);
-#else
-	GetProcessFileNameA procfilename = (GetProcessFileNameW)::GetProcAddress(hPSapi, "GetModuleFileNameExA");
-	if (procfilename == NULL)
-		return;
-	CHAR path[MAX_PATH + 1] = { 0 };
-	memset(path, 0, sizeof(path));
-	procfilename(mHandle_, NULL, path, MAX_PATH);
-	mExe_ = CA2CT(path);
-#endif
+	mExe_ = path;
 }
 
 void ExeModule::setPublicCA(const CString& f) {	

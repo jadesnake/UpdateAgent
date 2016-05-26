@@ -43,37 +43,6 @@ public:
 				app->addModule(m);
 		}
 	}
-	//处理前一个升级程序运行态
-	bool HandlePreUpdate() {
-		svy::SinglePtr<AppModule> app;
-		CString state;
-		DWORD	prePid = 0;
-		AppModule::ReadPid(prePid);
-		if (prePid == 0) {
-			return true;
-		}
-		DWORD nRights = PROCESS_QUERY_INFORMATION | PROCESS_DUP_HANDLE | SYNCHRONIZE | PROCESS_TERMINATE;
-		HANDLE h = ::OpenProcess(nRights, FALSE, prePid);
-		if (h == NULL)
-			return true;
-		app->ReadRunStatus(state);
-		if (0 == state.Compare(UPDATE_COMPLETE)) {
-			return true;
-		}
-		if (0==state.Compare(CHECK_UPDATE)|| 0==state.Compare(GET_UPDATE) )		{
-			//正在获取升级文件，强制杀死上一个进程
-			::TerminateProcess(h, 0xdead);
-			AppModule::SavePid(0);
-			::CloseHandle(h);
-			return true;
-		}
-		//请等待升级完成，给出等待ui
-		ExeModule exe = app->getTargetModule();
-		::TerminateProcess(exe.mHandle_->get(),0);
-		ShowMsgBox(_T("正在升级请稍候再试..."));
-		::CloseHandle(h);
-		return false;
-	}
 	bool canRunUpdate() {
 		return bRunUpdate;
 	}
@@ -162,7 +131,7 @@ public:
 	}
 	Upgrade *mui_;
 };
-
+#include <tlhelp32.h>
 //
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
                      _In_opt_ HINSTANCE hPrevInstance,
@@ -210,12 +179,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	//初始化soui
 	OleInitialize(NULL);
 	InstallSoui();
-	if (!prelogic.HandlePreUpdate()) {
-		UninstallSoui();
-		OleUninitialize();
-		return 0;
-	}
-
 	if ( !prelogic.canRunUpdate() ) {
 		//建立copy
 		CString dirAppD = svy::GetLocalAppDataPath();
