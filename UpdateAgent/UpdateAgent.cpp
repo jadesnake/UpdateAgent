@@ -53,7 +53,7 @@ protected:
 			exe.mVer_.mVer_ = margs_[_T("version")];
 			exe.mVer_.mProductCode_ = margs_[_T("productID")];
 			exe.mVer_.mEntryName_ = margs_[_T("entryName")];
-	
+			exe.mVer_.mSWJG_DM_ = margs_[_T("SWJG_DM")];
 			Args::iterator it = margs_.find(_T("nickName"));
 			if (it != margs_.end()) {
 				exe.mVer_.mNickName_ = it->second;
@@ -138,6 +138,10 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
                      _In_ LPWSTR    lpCmdLine,
                      _In_ int       nCmdShow)
 {
+	/*InstallSoui();
+	Upgrade *ui = ShowUpgrade(100);
+	HWND hWin = ui->GetRaw();
+	ui->Show();*/
 	/*
 	TestAsync *testAsync=__nullptr;
 	InstallSoui();

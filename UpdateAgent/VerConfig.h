@@ -12,6 +12,7 @@ public:
 	CString mProductCode_;
 	CString mEntryName_;
 	CString mNickName_;
+	CString mSWJG_DM_;
 };
 typedef std::vector<VerConfig>	VerConfigs;
 

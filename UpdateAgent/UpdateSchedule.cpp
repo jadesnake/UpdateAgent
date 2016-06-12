@@ -71,11 +71,10 @@ bool UpdateSchedule::TimerProc(HANDLE h) {
 }
 void UpdateSchedule::run() {
 	svy::SinglePtr<AppModule> app;
-	DWORD tm = 1000 * 60 * 60 * 10;	//release版本10分钟检查一次
+	DWORD tm = 1000 * 60 * 10;	//release版本10分钟检查一次
 #if defined(_DEBUG)
-	tm = 1000 * 60 * 60 * 10;		//debug版本1分钟检测一次
+	tm = 1000 * 60 * 1;			//debug版本1分钟检测一次
 #endif
-
 	ExeModule exe = app->getTargetModule();
 	CString s = svy::PathGetFileName(exe.getPathFile());
 	mCheckEntities_ = std::make_shared<UpdateEntity>(exe);

@@ -9,6 +9,7 @@ VerConfig::VerConfig(const VerConfig& val){
 	mProductCode_ = val.mProductCode_;
 	mEntryName_	  = val.mEntryName_;
 	mNickName_ = val.mNickName_;
+	mSWJG_DM_ = val.mSWJG_DM_;
 }
 VerConfig::~VerConfig() {
 

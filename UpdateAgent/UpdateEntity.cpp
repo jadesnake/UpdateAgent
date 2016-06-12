@@ -87,7 +87,9 @@ void UpdateEntity::Start(void* h) {
 	a.Replace('\\','/');
 	http.AddHeader(_T("SENDER"),_T("SERVYOU001"));
 	http.AddHeader(_T("ZCBM"), _T(""));
-	http.AddHeader(_T("SWJG_DM"), _T("19901000000"));
+
+	if (!mExe_.mVer_.mSWJG_DM_.IsEmpty())
+		http.AddHeader(_T("SWJG_DM"), mExe_.mVer_.mSWJG_DM_);
 	http.AddHeader(_T("JKVERSION"), _T("V1.0.055"));
 	http.AddHeader(_T("ACTIONCODE"), _T("5002"));
 	http.AddHeader(_T("HAS_BODY"), _T("1"));
