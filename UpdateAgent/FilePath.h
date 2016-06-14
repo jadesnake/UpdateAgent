@@ -1,6 +1,7 @@
 #pragma once
 namespace svy {
 	typedef std::function<void(const CString&)>	 TransFileFun;
+	typedef std::function<bool(const CString&)>	 FilterFileFun;
 
 	DWORD	CheckDir(LPCTSTR pDir, bool bCreate);
 
@@ -9,6 +10,8 @@ namespace svy {
 	bool	MoveDir(const CString& dir, const CString& dst);
 
 	bool	CopyDir(const CString& dir, const CString& dst,TransFileFun fun=nullptr);
+
+	bool	CopyDirByFilter(const CString& dir, const CString& dst,FilterFileFun fun = nullptr);
 
 	bool	DeleteDir(const CString& dir);
 

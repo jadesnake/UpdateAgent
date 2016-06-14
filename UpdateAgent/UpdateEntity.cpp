@@ -6,6 +6,7 @@
 #include "AppModule.h"
 #include "luaExterns.h"
 #include <tlhelp32.h>
+#include "StaticFun.h"
 UpdateEntity::UpdateEntity(const ExeModule& exe)
 	:mExe_(exe)
 	,mTotalFiles_(0)
@@ -264,6 +265,14 @@ bool UpdateEntity::FetchUpdate(const std::string& val) {
 	}
 	//处理升级包
 	HandleUpdatePack();
+	//记录升级成果
+	std::shared_ptr<UP_PACK> pack = mUpData_.getBegin();
+	while (pack = mUpData_.getNext()) {
+		StaticFun::UPGRADE_INFO upInfo;
+		upInfo.ver = pack->ver;
+		upInfo.path = pack->path;
+		StaticFun::SaveUpgrade(upInfo);
+	}
 	return true;
 }
 void UpdateEntity::HandleUpdatePack() {
@@ -361,6 +370,10 @@ CString UpdateEntity::GetDescription() {
 class UpdateAsync : public svy::Async
 {
 public:
+	static const UINT Complete = 1;
+	static const UINT RunPos   = 2;
+	static const UINT CompletePack = 3;
+
 	typedef std::function<void(void)> CmpFun;
 	UpdateAsync( UpdateEntity::UPDATA& up,const ExeModule& exe ) {
 		mUpData_.swap(up);
@@ -373,7 +386,7 @@ public:
 	}
 	void CopyCmp(const CString& f) {
 		mPos_++;
-		svy::ProgressTask task(mTask_,f, mPos_);
+		svy::ProgressTask task(mTask_,f, RunPos,mPos_);
 		svy::Async::PushTask(task);
 		::Sleep(100);		//为了让进度条不至于一闪而过
 	}
@@ -425,6 +438,9 @@ public:
 			}while (reTry<3);
 			if (bHasError)
 				break;
+			svy::ProgressTask cmpPack(mTask_, pack->ver, CompletePack, 0);
+			svy::Async::PushTask(cmpPack);
+
 			pack->step = UpdateEntity::Step::CompleteAll;
 			cmp.push_back(pack);
 
@@ -454,7 +470,7 @@ public:
 
 		lua_close(L);
 
-		svy::ProgressTask task(mTask_,strRet, -1);
+		svy::ProgressTask task(mTask_,strRet,Complete,0);
 		svy::Async::PushTask(task);
 	}
 	bool TermiateExe() {
@@ -497,7 +513,7 @@ public:
 	svy::ProgressTask::Runnable	 mTask_;
 };
 void UpdateEntity::UpdateAync(HWND hWin, svy::ProgressTask::Runnable task) {
-	auto f = svy::Bind(&UpdateEntity::AsyncUpdateCall, this, std::placeholders::_1, std::placeholders::_2);	
+	auto f = svy::Bind(&UpdateEntity::AsyncUpdateCall, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
 	UpdateAsync *Async=nullptr;
 	if (!mAsync_)
 		mAsync_ = std::make_shared<UpdateAsync>(mUpData_,mExe_);
@@ -509,17 +525,22 @@ void UpdateEntity::UpdateAync(HWND hWin, svy::ProgressTask::Runnable task) {
 	//清空
 	mUpData_.clear();
 }
-void UpdateEntity::AsyncUpdateCall(const CString& a, long b) {
+void UpdateEntity::AsyncUpdateCall(const CString& a,UINT b,long c) {
 	UpdateAsync *Async = nullptr;
-	Async = static_cast<UpdateAsync*>(mAsync_.get());
-	if (b == -1){
+	if (b==UpdateAsync::RunPos&&mAyncCall_)	{
+		mAyncCall_(a, b, c);
+	}
+	else if (b==UpdateAsync::Complete&&mAyncCall_) {
 		//完成
+		Async = static_cast<UpdateAsync*>(mAsync_.get());
 		mCurVer_ = Async->mCurVer_;
 		mUpData_.swap(Async->mUpData_);
-		mAsync_.reset();		
+		mAsync_.reset();
+		mAyncCall_(a, b, -1);
 	}
-	if (mAyncCall_)
-		mAyncCall_(a,b);
+	else if (b == UpdateAsync::CompletePack) {
+		StaticFun::DeleteUpgrade(a);
+	}
 }
 
 bool UpdateEntity::UpdateSync() {	
@@ -533,7 +554,7 @@ bool UpdateEntity::UpdateSync() {
 		CString dst = svy::FindFilePath(mExe_.getPathFile());
 		CString src = pack->path;
 
-		lua_State *L = app->getLua();
+		lua_State *L = StaticFun::getLua();
 		CString luaMain = svy::catUrl(src, _T("maintain\\maintain.lua"));
 		int nLuaState = luaL_dofile(L, CT2CA(luaMain));
 		if (nLuaState) {

@@ -26,19 +26,20 @@ namespace svy {
 	{
 	public:
 		//p1 文件
-		typedef std::function<void(const CString&,long)> Runnable;
+		typedef std::function<void(const CString&,UINT,long)> Runnable;
 		static const DWORD FLAG = static_cast<const DWORD>(TASK_FLAG::PROGRESS);
 		ProgressTask() 
 			:mP2_(0)
+			,mP3_(0)
 			,mRef_(1) {
 		}
 		ProgressTask(const Runnable& runnable) 
-			:mRun_(runnable), mP2_(0), mRef_(1)
+			:mRun_(runnable), mP2_(0), mRef_(1),mP3_(0)
 		{
 
 		}
-		ProgressTask(const Runnable& runnable, const CString& p1, long p2) 
-			:mRun_(runnable),mP1_(p1),mP2_(p2), mRef_(1)
+		ProgressTask(const Runnable& runnable, const CString& p1,UINT p2,long p3) 
+			:mRun_(runnable),mP1_(p1),mP2_(p2),mP3_(0),mRef_(1)
 		{
 
 		}
@@ -46,10 +47,11 @@ namespace svy {
 			mRun_ = task.mRun_;
 			mP1_  = task.mP1_;
 			mP2_  = task.mP2_;
+			mP3_  = task.mP3_;
 			mRef_.store(task.mRef_);
 		}
 		void DoWork() {
-			mRun_(mP1_,mP2_);
+			mRun_(mP1_,mP2_,mP3_);
 			Release();
 		}
 		bool CanDel() {
@@ -58,9 +60,10 @@ namespace svy {
 			return false;
 		}
 		ProgressTask& operator=(const ProgressTask& task) {
-			mRun_ = task.mRun_;
+			mRun_= task.mRun_;
 			mP1_ = task.mP1_;
 			mP2_ = task.mP2_;
+			mP3_ = task.mP3_;
 			mRef_.store(task.mRef_);
 			return (*this);
 		}
@@ -71,7 +74,8 @@ namespace svy {
 	protected:
 		Runnable mRun_;
 		CString	 mP1_;
-		long	 mP2_;
+		UINT	 mP2_;
+		long	 mP3_;
 		std::atomic_int mRef_;
 	};
 	//无锁异步对象，该对象使用两个后台线程独占队列

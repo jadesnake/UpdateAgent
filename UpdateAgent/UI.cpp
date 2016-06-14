@@ -1,6 +1,5 @@
 #include "stdafx.h"
 #include "UI.h"
-#include "AppModule.h"
 #include "FilePath.h"
 #include "soui/include/control/SMessageBox.h"
 #include "soui/controls.extend/SImageSwitcher.h"
@@ -46,7 +45,7 @@ void UnRegExtension() {
 		return;
 }
 
-bool InstallSoui() {
+bool InstallSoui(HINSTANCE hinst) {
 	bool bRet = false;
 	if (theUIApp)
 		return true;
@@ -56,7 +55,6 @@ bool InstallSoui() {
 
 	//使用imgdecoder-png图片解码模块演示apng动画
 	pComMgr = new SComMgr(_T("imgdecoder-png"));
-	svy::SinglePtr<AppModule> app;
 	//图片解码器，由imagedecoder-wid.dll模块提供
 	SOUI::CAutoRefPtr<SOUI::IImgDecoderFactory> pImgDecoderFactory;
 	//UI渲染模块，由render-gdi.dll或者render-skia.dll提供
@@ -86,7 +84,7 @@ bool InstallSoui() {
 	}
 	//为渲染模块设置它需要引用的图片解码模块
 	pRenderFactory->SetImgDecoderFactory(pImgDecoderFactory);
-	theUIApp = new SOUI::SApplication(pRenderFactory, app->gInst_);
+	theUIApp = new SOUI::SApplication(pRenderFactory, hinst);
 	theUIApp->SetLogManager(pLogMgr);
 	//
 	RegExtension();
@@ -164,9 +162,9 @@ void UninstallSoui(){
 	}
 	//SOUI::SSkinGif::Gdiplus_Shutdown();
 }
-int SouiRun() {
+int SouiRun(HINSTANCE hinst) {
 	if (theUIApp == nullptr) {
-		InstallSoui();
+		InstallSoui(hinst);
 	}
 	return theUIApp->Run(NULL);
 }
@@ -354,9 +352,20 @@ public:
 protected:
 	BEGIN_MSG_MAP_EX(NotifyTipWindow)
 		MSG_WM_INITDIALOG(OnInitDialog)
+		MSG_WM_QUERYENDSESSION(OnQueryEndSession)
 		CHAIN_MSG_MAP(SHostWnd)
 		REFLECT_NOTIFICATIONS_EX()
 	END_MSG_MAP()
+	BOOL OnQueryEndSession(UINT wParam,UINT lParam)
+	{
+		typedef DWORD(WINAPI* ShutdownReasonCreate)(HWND,LPCWSTR);
+		HMODULE userDll = LoadLibrary(_T("User32"));
+		ShutdownReasonCreate fun = (ShutdownReasonCreate)::GetProcAddress(userDll,"ShutdownBlockReasonCreate");
+		if (fun)
+			fun(m_hWnd, L"正在升级请勿强制结束！");
+		FreeLibrary(userDll);
+		return FALSE;
+	}
 	BOOL OnInitDialog(HWND hWnd, LPARAM lParam) {
 		mProgress_ = this->FindChildByName2<SOUI::SProgress>(L"body");
 		if (mProgress_) {

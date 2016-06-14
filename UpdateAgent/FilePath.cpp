@@ -191,6 +191,57 @@ namespace svy {
 		//清空移动过的目录
 		return bRet;
 	}
+	bool	CopyDirByFilter(const CString& dir, const CString& dst, FilterFileFun fun)
+	{
+		bool bRet = true;
+		WIN32_FIND_DATA	pData = { 0 };
+		HANDLE hFind = INVALID_HANDLE_VALUE;
+		CString a;
+		//文件移动使用move
+		if (dir.IsEmpty())
+			return false;
+		a = catUrl(dir, _T("*.*"));
+		hFind = ::FindFirstFile(a, &pData);
+		if (hFind == INVALID_HANDLE_VALUE)
+			return false;
+		//确保目的肯定存在
+		if (CheckDir(dst, true)) {
+			LOG_FILE(Log::L_ERROR, strFormat(_T("check dir %s"), dst));
+			return false;
+		}
+		do
+		{
+			CString name = pData.cFileName;
+			CString srcF, tarF;
+			if (name == '.' || name == _T("..")) {
+				//跳过系统默认目录
+				continue;
+			}
+			bool subRet = false;
+			if ((pData.dwFileAttributes&FILE_ATTRIBUTE_DIRECTORY) == FILE_ATTRIBUTE_DIRECTORY)
+			{
+				srcF = catUrl(dir, name);
+				tarF = catUrl(dst, name);
+				subRet = CopyDir(srcF, tarF, fun);
+			}
+			else {
+				srcF = catUrl(dir, name);
+				tarF = catUrl(dst, name);
+				if (fun) {
+					if (fun(srcF)) {
+						subRet = CopyFileInernal(srcF, tarF);
+					}
+				}
+				else
+					subRet = CopyFileInernal(srcF, tarF);
+			}
+			if (bRet)
+				bRet = subRet;
+		} while (FindNextFile(hFind, &pData));
+		::FindClose(hFind);
+		//清空移动过的目录
+		return bRet;
+	}
 	/*-----------------------------------------------------------------------------------------------*/
 	CString GetAppName()
 	{

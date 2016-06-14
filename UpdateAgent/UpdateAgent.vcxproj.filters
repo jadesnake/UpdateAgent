@@ -99,6 +99,9 @@
     <ClInclude Include="soui\controls.extend\SImageSwitcher.h">
       <Filter>UI</Filter>
     </ClInclude>
+    <ClInclude Include="StaticFun.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -157,6 +160,9 @@
     </ClCompile>
     <ClCompile Include="soui\controls.extend\SImageSwitcher.cpp">
       <Filter>UI</Filter>
+    </ClCompile>
+    <ClCompile Include="StaticFun.cpp">
+      <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

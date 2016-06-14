@@ -11,7 +11,7 @@
 #include "List.h"
 #include "ui.h"
 #include "UpdateEntity.h"
-
+#include "StaticFun.h"
 CString cmdSelfKey() {
 	CString chBuf;
 	chBuf.Format(_T("entryName:%s"), svy::GetAppName());
@@ -60,8 +60,8 @@ protected:
 			}
 
 			if (0 == exe.mVer_.mEntryName_.CompareNoCase(svy::GetAppName())) {
-				AppModule::REG_INFO regInfo;
-				AppModule::ReadRegisteInfo(regInfo);
+				StaticFun::REG_INFO regInfo;
+				StaticFun::ReadRegisteInfo(regInfo);
 				CString path = svy::catUrl(regInfo.path, svy::GetAppName());			
 				path += _T(".exe");
 				exe.setExePath(path);
@@ -88,8 +88,7 @@ private:
 };
 //测试代码
 void testLua() {
-	svy::SinglePtr<AppModule> app;
-	lua_State *L = app->getLua();
+	lua_State *L = StaticFun::getLua();
 	CString luaMain = _T("maintain.lua");
 	luaL_dofile(L, CT2CA(luaMain));
 	lua_getglobal(L, "BeginUpdate");
@@ -101,14 +100,13 @@ void testLua() {
 #include "ui.h"
 
 
-
-class TestAsync : public svy::Async 
+class TestAsync : public svy::Async
 {
 public:
 	TestAsync(Upgrade *ui) {
 		mui_ = ui;
 	}
-	void WinCall(const CString& p1, long p2) {
+	void WinCall(const CString& p1,UINT type, long p2) {
 		OutputDebugString(p1);
 		OutputDebugString(_T("\r\n"));
 		mui_->Update(p2);
@@ -117,27 +115,43 @@ public:
 	}
 	virtual void RunAsThread() override {
 		__super::RunAsThread();
-		for (long n = 0; n < 100;n++) {
+		for (long n = 0; n < 100; n++) {
 			CString p1;
-			p1.Format(_T("%d"),n);
-			auto f = std::bind(&TestAsync::WinCall, this, std::placeholders::_1, std::placeholders::_2);
-			svy::ProgressTask task( f,p1,n);
+			p1.Format(_T("%d"), n);
+			auto f = std::bind(&TestAsync::WinCall, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+			svy::ProgressTask task(f, p1, n,0);
 			PushTask(task);
 			::Sleep(100);
 		}
-		auto f1 = std::bind(&TestAsync::WinCall, this, std::placeholders::_1, std::placeholders::_2);
-		svy::ProgressTask task(f1,_T("complete"), -1);
+		auto f1 = std::bind(&TestAsync::WinCall, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+		svy::ProgressTask task(f1, _T("complete"), -1,0);
 		PushTask(task);
 	}
 	Upgrade *mui_;
 };
 #include <tlhelp32.h>
+
+class A
+{
+public:
+	~A()
+	{
+		::OutputDebugString(_T("_~A\r\n"));
+	}
+	void show() {
+		::OutputDebugString(_T("_show\r\n"));
+	}
+};
+
 //
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
                      _In_opt_ HINSTANCE hPrevInstance,
                      _In_ LPWSTR    lpCmdLine,
                      _In_ int       nCmdShow)
 {
+	/*std::vector<AppModule::UPGRADE_INFO> info;
+	AppModule::ReadUpgrade(info);
+	AppModule::DeleteUpgrade(_T("2"));*/
 	/*InstallSoui();
 	Upgrade *ui = ShowUpgrade(100);
 	HWND hWin = ui->GetRaw();
@@ -171,7 +185,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     UNREFERENCED_PARAMETER(lpCmdLine);
 	//读取自己的配置信息
 	svy::SinglePtr<AppModule> app;
-	AppModule::REG_INFO regInfo;
+	StaticFun::REG_INFO regInfo;
 	PreLogic			prelogic;	
 	app->gInst_ = hInstance;
 	app->getMySlefModule();
@@ -182,13 +196,22 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 	//初始化soui
 	OleInitialize(NULL);
-	InstallSoui();
+	InstallSoui(hInstance);
 	if ( !prelogic.canRunUpdate() ) {
 		//建立copy
 		CString dirAppD = svy::GetLocalAppDataPath();
 		CString dirSrc = svy::GetAppPath();
 		CString dirDst = svy::catUrl(dirAppD, svy::GetAppName());
-		svy::CopyDir(dirSrc, dirDst);
+		svy::CopyDirByFilter(dirSrc, dirDst,
+		[](const CString &a)
+		{
+			CString n = svy::PathGetFileName(a);
+			if (0 == n.Find(svy::LOG_FILE_NAME))
+			{
+				return false;
+			}
+			return true;
+		});
 		//
 		dirAppD = dirDst; //缓存运行目录
 		dirDst = svy::catUrl(dirDst, svy::GetAppName()) + _T(".exe");
@@ -206,15 +229,14 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		regInfo.path = dirSrc;
 		regInfo.name = svy::GetAppName();
 		//将自己位置信息写入注册表
-		AppModule::SaveRegisteInfo(regInfo);		
+		StaticFun::SaveRegisteInfo(regInfo);
 		::ShellExecute(NULL, _T("open"), dirDst,strCmd,dirAppD,0);
 		UninstallSoui();
 		OleUninitialize();
 		return 0;
 	}
-	AppModule::SavePid(::GetCurrentProcessId());
 	//初始化lua模块
-	lua_State *L = app->getLua();
+	lua_State *L = StaticFun::getLua();
 	//初始化libcurl环境
 	svy::CHttpClient::GlobalSetup();
 	//判断是否运行copy
@@ -227,6 +249,5 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 	UninstallSoui();
 	OleUninitialize();
-	AppModule::SavePid(0);
 	return 0;
 }

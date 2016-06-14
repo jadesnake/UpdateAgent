@@ -12,6 +12,7 @@
 #include <windows.h>
 #include <Psapi.h>
 #include <atlutil.h>
+#include <atlcoll.h>
 #include <shellapi.h>
 #pragma comment(lib,"shell32.lib")
 #pragma comment(lib,"msimg32.lib")

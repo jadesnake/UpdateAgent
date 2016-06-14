@@ -127,6 +127,7 @@ namespace svy {
 		procfilename(h, NULL, path, MAX_PATH);
 		ret = CA2CT(path);
 #endif
+		::FreeLibrary(hPSapi);
 		return ret;
 	}
 }

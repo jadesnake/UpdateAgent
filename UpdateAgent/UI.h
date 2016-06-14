@@ -11,11 +11,11 @@ public:
 };
 
 //°²×°soui2
-bool InstallSoui();
+bool InstallSoui(HINSTANCE hinst);
 //Ð¶ÔØsoui2
 void UninstallSoui();
 
-int SouiRun();
+int  SouiRun(HINSTANCE hinst);
 
 void ShowTipWindow(const CString& tip);
 

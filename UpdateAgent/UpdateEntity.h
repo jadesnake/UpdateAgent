@@ -54,7 +54,7 @@ protected:
 	//将目录下updateagent升级程序移到运行目录
 	virtual void HandleUpdateAgent(const CString& dir);
 	//
-	virtual void AsyncUpdateCall(const CString&, long);
+	virtual void AsyncUpdateCall(const CString&,UINT,long);
 	
 private:
 	ExeModule	mExe_;

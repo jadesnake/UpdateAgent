@@ -10,6 +10,7 @@ static UpdateSchedule *volatile gInstatnce_ = nullptr;
 
 UpdateSchedule::UpdateSchedule()
 {
+	m_bHasShown = false;
 }
 UpdateSchedule::~UpdateSchedule()
 {
@@ -32,10 +33,10 @@ void UpdateSchedule::AsyncUpdate() {
 	DWORD nF = mCheckEntities_->GetTotalFiles();
 	mUI_ = ShowUpgrade(nF);
 	mCheckEntities_->UpdateAync(mUI_->GetRaw(),
-		svy::Bind(&UpdateSchedule::AsyncUpdatePos,this,std::placeholders::_1, std::placeholders::_2)	);
+		svy::Bind(&UpdateSchedule::AsyncUpdatePos,this,std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)	);
 	mUI_->Show();
 }
-void UpdateSchedule::AsyncUpdatePos(const CString& f, long pos) {
+void UpdateSchedule::AsyncUpdatePos(const CString& f,UINT type,long pos) {
 	if (pos == -1) {
 		mUI_->Close();
 	}
@@ -59,7 +60,10 @@ bool UpdateSchedule::TimerProc(HANDLE h) {
 	}
 	if (wait == NULL)
 		return true;		//不需要升级	
-	ShowTipWindow(mCheckEntities_->GetDescription());
+	if (m_bHasShown==false) {
+		ShowTipWindow(mCheckEntities_->GetDescription());
+		m_bHasShown = true;
+	}
 	DWORD dwWait = ::WaitForSingleObject(wait, 2000);
 	if (dwWait == WAIT_TIMEOUT)
 		return true;

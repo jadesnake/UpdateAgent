@@ -11,7 +11,7 @@ namespace svy {
 				return false;	//Æô¶¯20¸ö£¿
 			}
 			if (!file_logger) {
-				strName << "mylogfile";
+				strName << (char*)CT2CA(LOG_FILE_NAME);
 				strName << nNum;
 				strName.flush();
 				file_logger = spdlog::rotating_logger_mt("file_logger", strName.str(), 104857 * 5, 1);
