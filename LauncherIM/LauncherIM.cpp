@@ -185,7 +185,10 @@ private:
 	Upgrade		*mUI_;
 	std::shared_ptr<UpdateAsync> mAsync_;
 };
-
+bool CopyFile(const CString& src, const CString& dst) {
+	::SetFileAttributes(src, FILE_ATTRIBUTE_NORMAL);
+	return ::CopyFile(src, dst, FALSE)?true:false;
+}
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
                      _In_opt_ HINSTANCE hPrevInstance,
                      _In_ LPWSTR    lpCmdLine,
@@ -196,32 +199,86 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	bool bRunCheck = false;
 	int nNumArgs = 0;
 	CString dirAppD = svy::GetAppPath();
+	std::vector<StaticFun::UPGRADE_INFO> infos;
+	StaticFun::ReadUpgrade(infos);
 	if (lpCmdLine[0] == L'\0')	{
+		if (0 == infos.size()) {
+			CString im = svy::catUrl(dirAppD, IM_EXE);
+			::ShellExecute(NULL, _T("open"), im, NULL, dirAppD, SW_SHOW);
+			return 0;
+		}
 		//执行备份处理
 		TCHAR sFilename[MAX_PATH] = _T("");
 		GetModuleFileName(NULL, sFilename,MAX_PATH);
-		CString exeTrue;
-		exeTrue = svy::catUrl(dirAppD, _T("launcher.exe"));
-		::SetFileAttributes(sFilename, FILE_ATTRIBUTE_NORMAL);
-		if (!::MoveFileEx(sFilename, exeTrue, MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH)) {
-			bRunCheck = true;
+		CString exeTrue,launcher;
+		exeTrue = svy::catUrl(dirAppD, _T("launcher"));
+		if (!::PathFileExists(exeTrue)) {
+			::CreateDirectory(exeTrue,NULL);
 		}
-		else {
-			//order:cl -> order:check local pack
-			::ShellExecute(NULL, _T("open"), exeTrue,_T("order:clp"), dirAppD, 0);
+		CString src, dst;
+
+		src = sFilename;
+		dst = svy::catUrl(exeTrue, _T("launcher.exe"));
+		CopyFile(src,dst);
+		launcher = dst;
+		std::vector<CString> cpyf;
+		cpyf.push_back(_T("uires.zip"));
+#if defined(_DEBUG)
+		cpyf.push_back(_T("imgdecoder-wicd.dll"));
+		cpyf.push_back(_T("imgdecoder-stbd.dll"));
+		cpyf.push_back(_T("imgdecoder-pngd.dll"));
+		cpyf.push_back(_T("imgdecoder-gdipd.dll"));
+		cpyf.push_back(_T("log4zd.dll"));
+		cpyf.push_back(_T("render-gdid.dll"));
+		cpyf.push_back(_T("resprovider-zipd.dll"));
+		cpyf.push_back(_T("souid.dll"));
+		cpyf.push_back(_T("soui-sys-resourced.dll"));
+		cpyf.push_back(_T("translatord.dll"));
+		cpyf.push_back(_T("utilitiesd.dll"));
+#else
+		cpyf.push_back(_T("imgdecoder-wic.dll"));
+		cpyf.push_back(_T("imgdecoder-stb.dll"));
+		cpyf.push_back(_T("imgdecoder-png.dll"));
+		cpyf.push_back(_T("imgdecoder-gdip.dll"));
+		cpyf.push_back(_T("log4z.dll.dll"));
+		cpyf.push_back(_T("render-gdi.dll"));
+		cpyf.push_back(_T("resprovider-zip.dll"));
+		cpyf.push_back(_T("soui.dll"));
+		cpyf.push_back(_T("soui-sys-resource.dll"));
+		cpyf.push_back(_T("translator.dll"));
+		cpyf.push_back(_T("utilities.dll"));
+#endif
+		for (size_t n = 0; n < cpyf.size();n++) {
+			src = svy::catUrl(dirAppD, cpyf[n]);
+			dst = svy::catUrl(exeTrue, cpyf[n]);
+			if (!CopyFile(src, dst))
+			{
+				bRunCheck = true;
+				break;
+			}
+		}
+		if (!bRunCheck)	{
+			::ShellExecute(NULL, _T("open"), launcher, _T("order:clp"), dirAppD, 0);
 			return 0;
 		}
 	}
 	else {
 		bRunCheck = true;
 	}
+#if defined(_DEBUG)
+	MessageBox(NULL,_T("wait"),_T("LauncherIM"),0);
+#endif
+	if (0 == infos.size()) {
+		dirAppD = svy::FindFilePath(dirAppD);
+		CString im = svy::catUrl(dirAppD, IM_EXE);
+		::ShellExecute(NULL, _T("open"), im, NULL, dirAppD, SW_SHOW);
+		return 0;
+	}
 	OleInitialize(NULL);
 	if (bRunCheck) {
 		InstallSoui(hInstance);
-		std::vector<StaticFun::UPGRADE_INFO> infos;
 		std::vector<StaticFun::UPGRADE_INFO> goodPacks;
 		std::vector<StaticFun::UPGRADE_INFO> badPacks;
-		StaticFun::ReadUpgrade(infos);
 		//检查有效性
 		for (size_t nI = 0; nI < infos.size();nI++) {
 			StaticFun::UPGRADE_INFO info = infos[nI];
@@ -248,6 +305,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		UninstallSoui();
 	}
 	OleUninitialize();
-	::ShellExecute(NULL, _T("open"), IM_EXE,NULL, dirAppD, 0);
+	dirAppD = svy::FindFilePath(dirAppD);
+	CString im = svy::catUrl(dirAppD, IM_EXE);
+	::ShellExecute(NULL, _T("open"), im, NULL, dirAppD, SW_SHOW);
 	return 0;
 }

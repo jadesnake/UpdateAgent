@@ -276,6 +276,10 @@ namespace svy {
 		if (nEnd_L == -1 && nEnd_R == -1)
 			return ret;
 		nEnd = nEnd_L > nEnd_R ? nEnd_L : nEnd_R;
+		if ( (nEnd+1) == ret.GetLength()) {
+			ret.Delete(nEnd,1);
+			return FindFilePath(ret);
+		}
 		ret = ret.Mid(0, nEnd + 1);
 		return ret;
 	}

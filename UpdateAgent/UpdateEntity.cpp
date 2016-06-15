@@ -515,15 +515,22 @@ public:
 void UpdateEntity::UpdateAync(HWND hWin, svy::ProgressTask::Runnable task) {
 	auto f = svy::Bind(&UpdateEntity::AsyncUpdateCall, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
 	UpdateAsync *Async=nullptr;
-	if (!mAsync_)
-		mAsync_ = std::make_shared<UpdateAsync>(mUpData_,mExe_);
-	mAyncCall_ = task;
-	Async = static_cast<UpdateAsync*>(mAsync_.get());
-	Async->mTask_ = f;
-	Async->mRoot_ = svy::FindFilePath(mExe_.getPathFile());
-	Async->Start(hWin);
-	//Çå¿Õ
-	mUpData_.clear();
+	if(0==mUpData_.count())
+	{
+		task(_T("complete"),UpdateAsync::Complete,-1);
+	}
+	else
+	{
+		if (!mAsync_)
+			mAsync_ = std::make_shared<UpdateAsync>(mUpData_, mExe_);
+		mAyncCall_ = task;
+		Async = static_cast<UpdateAsync*>(mAsync_.get());
+		Async->mTask_ = f;
+		Async->mRoot_ = svy::FindFilePath(mExe_.getPathFile());
+		Async->Start(hWin);
+		//Çå¿Õ
+		mUpData_.clear();
+	}
 }
 void UpdateEntity::AsyncUpdateCall(const CString& a,UINT b,long c) {
 	UpdateAsync *Async = nullptr;
