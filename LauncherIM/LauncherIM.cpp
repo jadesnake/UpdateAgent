@@ -185,7 +185,7 @@ private:
 	Upgrade		*mUI_;
 	std::shared_ptr<UpdateAsync> mAsync_;
 };
-bool CopyFile(const CString& src, const CString& dst) {
+bool CopyFileMy(const CString& src, const CString& dst) {
 	::SetFileAttributes(src, FILE_ATTRIBUTE_NORMAL);
 	return ::CopyFile(src, dst, FALSE)?true:false;
 }
@@ -199,12 +199,13 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	bool bRunCheck = false;
 	int nNumArgs = 0;
 	CString dirAppD = svy::GetAppPath();
+	CString imEXE;
 	std::vector<StaticFun::UPGRADE_INFO> infos;
 	StaticFun::ReadUpgrade(infos);
 	if (lpCmdLine[0] == L'\0')	{
+		imEXE = svy::catUrl(dirAppD, IM_EXE);
 		if (0 == infos.size()) {
-			CString im = svy::catUrl(dirAppD, IM_EXE);
-			::ShellExecute(NULL, _T("open"), im, NULL, dirAppD, SW_SHOW);
+			::ShellExecute(NULL, _T("open"), imEXE, NULL, dirAppD, SW_SHOW);
 			return 0;
 		}
 		//执行备份处理
@@ -219,44 +220,48 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 		src = sFilename;
 		dst = svy::catUrl(exeTrue, _T("launcher.exe"));
-		CopyFile(src,dst);
-		launcher = dst;
-		std::vector<CString> cpyf;
-		cpyf.push_back(_T("uires.zip"));
-#if defined(_DEBUG)
-		cpyf.push_back(_T("imgdecoder-wicd.dll"));
-		cpyf.push_back(_T("imgdecoder-stbd.dll"));
-		cpyf.push_back(_T("imgdecoder-pngd.dll"));
-		cpyf.push_back(_T("imgdecoder-gdipd.dll"));
-		cpyf.push_back(_T("log4zd.dll"));
-		cpyf.push_back(_T("render-gdid.dll"));
-		cpyf.push_back(_T("resprovider-zipd.dll"));
-		cpyf.push_back(_T("souid.dll"));
-		cpyf.push_back(_T("soui-sys-resourced.dll"));
-		cpyf.push_back(_T("translatord.dll"));
-		cpyf.push_back(_T("utilitiesd.dll"));
-#else
-		cpyf.push_back(_T("imgdecoder-wic.dll"));
-		cpyf.push_back(_T("imgdecoder-stb.dll"));
-		cpyf.push_back(_T("imgdecoder-png.dll"));
-		cpyf.push_back(_T("imgdecoder-gdip.dll"));
-		cpyf.push_back(_T("log4z.dll.dll"));
-		cpyf.push_back(_T("render-gdi.dll"));
-		cpyf.push_back(_T("resprovider-zip.dll"));
-		cpyf.push_back(_T("soui.dll"));
-		cpyf.push_back(_T("soui-sys-resource.dll"));
-		cpyf.push_back(_T("translator.dll"));
-		cpyf.push_back(_T("utilities.dll"));
-#endif
-		for (size_t n = 0; n < cpyf.size();n++) {
-			src = svy::catUrl(dirAppD, cpyf[n]);
-			dst = svy::catUrl(exeTrue, cpyf[n]);
-			if (!CopyFile(src, dst))
-			{
-				bRunCheck = true;
-				break;
-			}
+		if (!CopyFileMy(src, dst)) {
+			bRunCheck = true;
 		}
+		else {
+			launcher = dst;
+			std::vector<CString> cpyf;
+			cpyf.push_back(_T("uires.zip"));
+#if defined(_DEBUG)
+			cpyf.push_back(_T("imgdecoder-wicd.dll"));
+			cpyf.push_back(_T("imgdecoder-stbd.dll"));
+			cpyf.push_back(_T("imgdecoder-pngd.dll"));
+			cpyf.push_back(_T("imgdecoder-gdipd.dll"));
+			cpyf.push_back(_T("log4zd.dll"));
+			cpyf.push_back(_T("render-gdid.dll"));
+			cpyf.push_back(_T("resprovider-zipd.dll"));
+			cpyf.push_back(_T("souid.dll"));
+			cpyf.push_back(_T("soui-sys-resourced.dll"));
+			cpyf.push_back(_T("translatord.dll"));
+			cpyf.push_back(_T("utilitiesd.dll"));
+#else
+			cpyf.push_back(_T("imgdecoder-wic.dll"));
+			cpyf.push_back(_T("imgdecoder-stb.dll"));
+			cpyf.push_back(_T("imgdecoder-png.dll"));
+			cpyf.push_back(_T("imgdecoder-gdip.dll"));
+			cpyf.push_back(_T("log4z.dll"));
+			cpyf.push_back(_T("render-gdi.dll"));
+			cpyf.push_back(_T("resprovider-zip.dll"));
+			cpyf.push_back(_T("soui.dll"));
+			cpyf.push_back(_T("soui-sys-resource.dll"));
+			cpyf.push_back(_T("translator.dll"));
+			cpyf.push_back(_T("utilities.dll"));
+#endif
+			for (size_t n = 0; n < cpyf.size(); n++) {
+				src = svy::catUrl(dirAppD, cpyf[n]);
+				dst = svy::catUrl(exeTrue, cpyf[n]);
+				if (!CopyFileMy(src, dst))
+				{
+					bRunCheck = true;
+					break;
+				}
+			}
+		}		
 		if (!bRunCheck)	{
 			::ShellExecute(NULL, _T("open"), launcher, _T("order:clp"), dirAppD, 0);
 			return 0;
@@ -264,14 +269,14 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	}
 	else {
 		bRunCheck = true;
+		dirAppD = svy::FindFilePath(dirAppD);
+		imEXE = svy::catUrl(dirAppD, IM_EXE);
 	}
 #if defined(_DEBUG)
-	MessageBox(NULL,_T("wait"),_T("LauncherIM"),0);
+	MessageBox(NULL, _T("wait"), _T("LauncherIM"), 0);
 #endif
 	if (0 == infos.size()) {
-		dirAppD = svy::FindFilePath(dirAppD);
-		CString im = svy::catUrl(dirAppD, IM_EXE);
-		::ShellExecute(NULL, _T("open"), im, NULL, dirAppD, SW_SHOW);
+		::ShellExecute(NULL, _T("open"), imEXE, NULL, dirAppD, SW_SHOW);
 		return 0;
 	}
 	OleInitialize(NULL);
@@ -305,8 +310,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		UninstallSoui();
 	}
 	OleUninitialize();
-	dirAppD = svy::FindFilePath(dirAppD);
-	CString im = svy::catUrl(dirAppD, IM_EXE);
-	::ShellExecute(NULL, _T("open"), im, NULL, dirAppD, SW_SHOW);
+	::ShellExecute(NULL, _T("open"), imEXE, NULL, dirAppD, SW_SHOW);
 	return 0;
 }
