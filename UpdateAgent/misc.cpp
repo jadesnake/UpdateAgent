@@ -99,35 +99,4 @@ namespace svy {
 		ret = CA2CT(hex);
 		return ret;
 	}
-	/*-----------------------------------------------------------------------------------*/
-#if defined(_UNICODE)
-	typedef DWORD(WINAPI* GetProcessFileNameW)(HANDLE, HMODULE, LPWSTR, DWORD);
-#else
-	typedef DWORD(WINAPI* GetProcessFileNameA)(HANDLE, HMODULE, LPASTR, DWORD);
-#endif
-	CString GetProcessFullName(HANDLE h) {
-		CString ret;
-		HMODULE hPSapi = ::LoadLibrary(_T("Psapi.DLL"));
-		if (hPSapi == NULL)
-			return ret;
-#if defined(_UNICODE)
-		GetProcessFileNameW procfilename = (GetProcessFileNameW)::GetProcAddress(hPSapi, "GetModuleFileNameExW");
-		if (procfilename == NULL)
-			return ret;
-		WCHAR path[MAX_PATH + 1] = { 0 };
-		memset(path, 0, sizeof(path));
-		procfilename(h, NULL, path, MAX_PATH);
-		ret = CW2CT(path);
-#else
-		GetProcessFileNameA procfilename = (GetProcessFileNameW)::GetProcAddress(hPSapi, "GetModuleFileNameExA");
-		if (procfilename == NULL)
-			return ret;
-		CHAR path[MAX_PATH + 1] = { 0 };
-		memset(path, 0, sizeof(path));
-		procfilename(h, NULL, path, MAX_PATH);
-		ret = CA2CT(path);
-#endif
-		::FreeLibrary(hPSapi);
-		return ret;
-	}
 }

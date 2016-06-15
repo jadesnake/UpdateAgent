@@ -31,4 +31,6 @@ namespace svy {
 	DWORD CheckDir(LPCTSTR pDir, bool bCreate);
 
 	CString GetLocalAppDataPath();
+
+	CString GetProcessFullName(HANDLE h);
 }

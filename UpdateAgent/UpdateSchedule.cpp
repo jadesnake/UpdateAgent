@@ -32,8 +32,10 @@ void UpdateSchedule::release() {
 void UpdateSchedule::AsyncUpdate() {
 	DWORD nF = mCheckEntities_->GetTotalFiles();
 	mUI_ = ShowUpgrade(nF);
-	mCheckEntities_->UpdateAync(mUI_->GetRaw(),
-		svy::Bind(&UpdateSchedule::AsyncUpdatePos,this,std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)	);
+	mUI_->InitShown = [this]() {
+		mCheckEntities_->UpdateAync(mUI_->GetRaw(),
+			svy::Bind(&UpdateSchedule::AsyncUpdatePos, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
+	};
 	mUI_->Show();
 }
 void UpdateSchedule::AsyncUpdatePos(const CString& f,UINT type,long pos) {

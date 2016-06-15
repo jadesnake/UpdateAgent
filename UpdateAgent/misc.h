@@ -59,6 +59,4 @@ namespace svy {
 	bool decodeHex(const char *inhex, DWORD hexlen, CStringA &to);
 	//求文件内容的md5值
 	CString fileContentHex(const CString& f);
-
-	CString GetProcessFullName(HANDLE h);
 }

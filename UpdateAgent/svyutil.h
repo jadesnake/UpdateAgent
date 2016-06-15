@@ -39,7 +39,7 @@ namespace svy {
 
 		}
 		ProgressTask(const Runnable& runnable, const CString& p1,UINT p2,long p3) 
-			:mRun_(runnable),mP1_(p1),mP2_(p2),mP3_(0),mRef_(1)
+			:mRun_(runnable),mP1_(p1),mP2_(p2),mP3_(p3),mRef_(1)
 		{
 
 		}

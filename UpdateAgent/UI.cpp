@@ -372,6 +372,8 @@ protected:
 			mProgress_->SetRange(0, mMax_);
 			mProgress_->SetValue(0);
 		}
+		if (InitShown)
+			InitShown();
 		return 0;
 	}
 	virtual void OnFinalMessage(HWND hWnd) override{

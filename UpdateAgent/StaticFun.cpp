@@ -79,7 +79,7 @@ bool StaticFun::ReadUpgrade(std::vector<UPGRADE_INFO> &infos)
 			retCode = RegEnumValue(hKey, i,
 				achValue,
 				&cchValue, NULL, NULL, (LPBYTE)achData, &dataLen);
-			if (dataLen && cchValue && 0 == svy::CheckDir(achData, false)) {
+			if (dataLen && cchValue) {
 				UPGRADE_INFO info;
 				info.ver = achValue;
 				info.path = achData;

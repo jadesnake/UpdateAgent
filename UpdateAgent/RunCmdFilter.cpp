@@ -19,10 +19,9 @@ void RunCmdFilter::runParser()
 		return;
 	}
 	LPWSTR *szArglist = CommandLineToArgvW(::GetCommandLine(),&nNumArgs);
-	if (nNumArgs == 1)
-		return;	//Ìø¹ý³ÌÐòÂ·¾¶
-	//
 	CString strCmd, strVal;
+	if (nNumArgs == 1)
+		return	;
 	for (int n = 1; n < nNumArgs;n++)
 	{
 		LPWSTR nxtArg   = szArglist[n];
@@ -46,4 +45,5 @@ void RunCmdFilter::runParser()
 			}
 		}
 	}
+	::LocalFree(szArglist);
 }

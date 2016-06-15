@@ -1,0 +1,2 @@
+[2016-06-15 10:16:55.662] [file_logger] [error] e:\project\updateagent\updateagent\filepath.cpp svy::CopyFileInernal 98 E:\project\testUpdate\Debug\V02.1.046\ServYouRTC.exe copy E:\project\UpdateAgent\UpdateAgent\Debug\ServYouRTC.exe code 32
+[2016-06-15 10:19:46.985] [file_logger] [error] e:\project\updateagent\updateagent\filepath.cpp svy::CopyFileInernal 98 E:\project\testUpdate\Debug\V02.1.046\ServYouRTC.exe copy E:\project\UpdateAgent\UpdateAgent\Debug\ServYouRTC.exe code 32

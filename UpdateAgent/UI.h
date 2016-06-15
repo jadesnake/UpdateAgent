@@ -3,6 +3,8 @@
 
 class Upgrade {
 public:
+	std::function<void(void)> InitShown;	
+	
 	virtual ~Upgrade() {	}
 	virtual void Update(long n)	=0;
 	virtual void Close() = 0;
