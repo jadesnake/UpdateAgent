@@ -6,12 +6,13 @@ std::shared_ptr<spdlog::logger> file_logger;
 namespace svy {
 	bool openLogger(int nNum) {
 		std::stringstream strName;
+		CString strPath = catUrl(GetAppPath(),LOG_FILE_NAME);
 		try {
 			if (nNum >= 20) {
 				return false;	//Æô¶¯20¸ö£¿
 			}
 			if (!file_logger) {
-				strName << (char*)CT2CA(LOG_FILE_NAME);
+				strName << (char*)CT2CA(strPath);
 				strName << nNum;
 				strName.flush();
 				file_logger = spdlog::rotating_logger_mt("file_logger", strName.str(), 104857 * 5, 1);

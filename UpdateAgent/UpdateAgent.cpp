@@ -149,6 +149,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
                      _In_ LPWSTR    lpCmdLine,
                      _In_ int       nCmdShow)
 {
+	//testLua();
 	/*std::vector<AppModule::UPGRADE_INFO> info;
 	AppModule::ReadUpgrade(info);
 	AppModule::DeleteUpgrade(_T("2"));*/
