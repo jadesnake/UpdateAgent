@@ -202,6 +202,35 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	CString imEXE;
 	std::vector<StaticFun::UPGRADE_INFO> infos;
 	StaticFun::ReadUpgrade(infos);
+	//根据当前版本信息过滤注册表中已存升级包版本
+	{
+		CString curVerPath = svy::catUrl(dirAppD, _T("\\config\\VersionIM.ini"));
+		if (!::PathFileExists(curVerPath)) {
+			curVerPath = svy::catUrl(svy::FindFilePath(dirAppD), _T("\\config\\Version.ini"));
+		}
+		if (::PathFileExists(curVerPath)) {
+			TCHAR strTemp[1024];
+			DWORD dwReadLen = ::GetPrivateProfileString(_T("Product"), _T("Version"), _T(""), strTemp, 1024 * sizeof(TCHAR), curVerPath);
+			if (dwReadLen) {
+				CString strValue(strTemp);
+				strValue.Remove('V'); strValue.Remove('v'); strValue.Remove('.');
+				long curVerson = _ttol(strValue);
+				std::vector<StaticFun::UPGRADE_INFO> goodPacks;
+				for (size_t n = 0; n < infos.size(); n++) {
+					CString upVersion = infos[n].ver;
+					upVersion.Remove('V'); upVersion.Remove('v'); upVersion.Remove('.');
+					long verson = _ttol(upVersion);
+					if (verson > curVerson && ::PathFileExists(infos[n].path)) {
+						goodPacks.push_back(infos[n]);
+					}
+				}
+				infos.clear();
+				if (goodPacks.size()) {
+					infos.assign(goodPacks.begin(),goodPacks.end());
+				}
+			}
+		}	
+	}
 	if (lpCmdLine[0] == L'\0')	{
 		imEXE = svy::catUrl(dirAppD, IM_EXE);
 		if (0 == infos.size()) {
@@ -272,9 +301,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		dirAppD = svy::FindFilePath(dirAppD);
 		imEXE = svy::catUrl(dirAppD, IM_EXE);
 	}
-#if defined(_DEBUG)
-	MessageBox(NULL, _T("wait"), _T("LauncherIM"), 0);
-#endif
 	if (0 == infos.size()) {
 		::ShellExecute(NULL, _T("open"), imEXE, NULL, dirAppD, SW_SHOW);
 		return 0;

@@ -1,25 +1,30 @@
 
-function attrdir (path)
+function clearPersonPoolDB (path)
     for file in lfs.dir(path) do
         if file ~= "." and file ~= ".." then
             local f = path..'/'..file
-            MsgBox("\t "..f)
-            local attr = lfs.attributes (f)
-            assert (type(attr) == "table")
-            if attr.mode == "directory" then
-                attrdir (f)
-            else
-                for name, value in pairs(attr) do
-                    MsgBox(name..value)
-                end
+            local attr = lfs.is_dir(f)
+            if attr==true then
+				MsgBox(f.."\\PersonPool.db");
+				DeleteDir(f.."\\PersonPool.db");
+				DeleteDir(f.."\\PersonPool.db-shm");
+				DeleteDir(f.."\\PersonPool.db-wal");
             end
         end
     end
 end
 
 function BeginUpdate(a,b,c)
-	attrdir(lfs.currentdir())
-	
+	local path = c;
+	local pathEnd = string.sub(path,-1);	
+	if pathEnd=="\\" or pathEnd=="/" then
+		path = path.."user";	
+	else
+		path = path.."\\user";
+	end
+	MsgBox(path);
+	clearPersonPoolDB(path);
+	--[[attrdir(lfs.currentdir())
 	local db = sqlite3.open("Contact.db");
 	db:exec[[
 	CREATE TABLE test (id INTEGER PRIMARY KEY, content);
@@ -27,4 +32,9 @@ function BeginUpdate(a,b,c)
 	INSERT INTO test VALUES (NULL, 'Hello Lua');
 	INSERT INTO test VALUES (NULL, 'Hello Sqlite3')
 	]]
+	--]]
+end
+function EndUpdate(a,b,c)
+	local path = c;
+	DeleteDir(path.."\\maintain\\maintain.lua");
 end

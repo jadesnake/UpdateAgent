@@ -78,6 +78,8 @@ namespace svy {
 		return dwRet;
 	}
 	bool MoveFileInernal(const CString& a, const CString& b) {
+		if (-1 != b.Find(_T("Thumbs.db")))
+			return true;	//Thumbs.db不需要copy系统会自动生成
 		::SetFileAttributes(a, FILE_ATTRIBUTE_NORMAL);
 		if (::MoveFileEx(a, b, MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH))	{
 			if( a.CompareNoCase(b) )
@@ -89,6 +91,8 @@ namespace svy {
 		return false;
 	}
 	bool CopyFileInernal(const CString& a, const CString& b) {
+		if (-1 != b.Find(_T("Thumbs.db")))
+			return true;	//Thumbs.db不需要copy系统会自动生成
 		::SetFileAttributes(a, FILE_ATTRIBUTE_NORMAL);
 		svy::CheckDir(b,true);
 		if (::CopyFile(a, b,FALSE)) {

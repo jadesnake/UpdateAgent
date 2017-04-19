@@ -94,7 +94,7 @@ void testLua() {
 	lua_getglobal(L, "BeginUpdate");
 	lua_pushstring(L, "12121212");
 	lua_pushstring(L, "test something1");
-	lua_pushstring(L, "test something2");
+	lua_pushstring(L, "E:\\project\\sitong\\imclient\\bin\\Debug");
 	lua_pcall(L, 3, 0, 0);
 }
 #include "ui.h"
